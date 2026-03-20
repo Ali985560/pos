@@ -1,0 +1,3777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Siraj CSC — Command Center</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ===== FORCE LIGHT MODE — ignore system dark mode ===== */
+:root {
+  color-scheme: light only;
+  --bg: #f4f6fb;
+  --bg2: #eef1f8;
+  --panel: #ffffff;
+  --panel2: #f8f9fd;
+  --border: #e2e8f0;
+  --border2: #cbd5e1;
+  --saffron: #e07b00;
+  --saffron2: #f59e0b;
+  --saffron-bg: #fff7ed;
+  --green: #15803d;
+  --green-bg: #f0fdf4;
+  --blue: #1d4ed8;
+  --blue-bg: #eff6ff;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --cyan: #0891b2;
+  --gold: #b45309;
+  --text1: #0f172a;
+  --text2: #334155;
+  --text3: #64748b;
+  --text4: #94a3b8;
+  --success: #15803d;
+  --success-bg: #f0fdf4;
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --info: #0369a1;
+  --info-bg: #f0f9ff;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+  --radius: 10px;
+  --radius-lg: 14px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html { font-size: 15px; color-scheme: light; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text1);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ===== TOPNAV ===== */
+.topnav {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+
+.brand { display:flex; align-items:center; gap:12px; }
+
+.brand-emblem {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, #ff9933 0%, #138808 100%);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700; font-size: 14px; color: #fff;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(255,153,51,0.3);
+}
+
+.brand-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700; font-size: 20px;
+  color: var(--text1); letter-spacing: 1px;
+}
+
+.brand-sub {
+  font-size: 11px; color: var(--text3);
+  letter-spacing: 2px; text-transform: uppercase; margin-top:-2px;
+}
+
+.nav-center { display:flex; gap:4px; }
+
+.nav-tab {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; color: var(--text3);
+  transition: all 0.18s;
+  border: none; background: none;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.nav-tab:hover { color: var(--text1); background: var(--bg2); }
+.nav-tab.active {
+  color: var(--saffron);
+  background: var(--saffron-bg);
+  border: 1px solid rgba(224,123,0,0.2);
+}
+
+.nav-right { display:flex; align-items:center; gap:10px; }
+
+.clock {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; color: var(--info);
+  background: var(--info-bg);
+  padding: 5px 12px; border-radius: 7px;
+  border: 1px solid rgba(3,105,161,0.15);
+}
+
+.date-badge { font-size: 12px; color: var(--text3); font-weight: 500; }
+
+/* ===== APP BODY ===== */
+.app-body { display:flex; height:calc(100vh - 60px); }
+.screen { display:none; width:100%; }
+.screen.active { display:flex; flex-direction:column; }
+
+/* ===== POS SCREEN ===== */
+.pos-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  height: 100%; gap:0;
+}
+
+.pos-left {
+  padding: 16px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.section-header {
+  display: flex; align-items:center;
+  justify-content:space-between; margin-bottom:14px;
+}
+
+.section-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text3);
+}
+
+.search-bar {
+  display:flex; align-items:center; gap:8px;
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 9px; padding: 9px 13px; margin-bottom:14px;
+  box-shadow: var(--shadow);
+}
+
+.search-bar input {
+  background:none; border:none; outline:none;
+  color: var(--text1); font-family:'DM Sans',sans-serif;
+  font-size: 14px; width:100%;
+}
+
+.search-bar input::placeholder { color: var(--text4); }
+
+.cat-filters {
+  display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;
+}
+
+.cat-btn {
+  padding: 5px 13px; border-radius:20px;
+  font-size: 12px; font-weight:500; cursor:pointer;
+  border: 1px solid var(--border);
+  background: #fff; color: var(--text3);
+  transition: all 0.18s; font-family:'DM Sans',sans-serif;
+}
+
+.cat-btn:hover { border-color: var(--saffron); color: var(--saffron); }
+.cat-btn.active {
+  background: var(--saffron-bg);
+  border-color: rgba(224,123,0,0.35);
+  color: var(--saffron);
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px,1fr));
+  gap: 9px;
+}
+
+.service-btn {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 13px;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.service-btn::before {
+  content:'';
+  position:absolute; top:0; left:0;
+  width:3px; height:100%;
+  background: var(--svc-accent, var(--saffron));
+  opacity:0; transition:opacity 0.18s;
+}
+
+.service-btn:hover {
+  border-color: var(--svc-accent, var(--saffron));
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.service-btn:hover::before { opacity:1; }
+.service-btn:active { transform: scale(0.97); }
+
+.svc-icon { font-size:22px; margin-bottom:8px; display:block; }
+.svc-name { font-size:13px; font-weight:500; color:var(--text1); margin-bottom:5px; line-height:1.3; }
+.svc-price { font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--saffron); font-weight:500; }
+.svc-price.variable { color:var(--info); font-size:11px; font-family:'DM Sans',sans-serif; }
+
+/* ===== BILL PANEL ===== */
+.pos-right {
+  display:flex; flex-direction:column;
+  background: #fff;
+  border-left: 1px solid var(--border);
+}
+
+.bill-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+}
+
+.bill-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px; font-weight:700;
+  letter-spacing:1px; color:var(--text1); margin-bottom:10px;
+}
+
+.customer-section { display:flex; gap:8px; align-items:center; }
+
+.customer-input {
+  flex:1; background: var(--bg);
+  border: 1.5px solid var(--border); border-radius:9px;
+  padding: 9px 13px; color:var(--text1);
+  font-family:'DM Sans',sans-serif; font-size:13px;
+  outline:none; transition:border-color 0.18s;
+}
+
+.customer-input:focus { border-color: var(--saffron); }
+.customer-input::placeholder { color:var(--text4); }
+
+.customer-found {
+  background: var(--success-bg);
+  border: 1px solid rgba(21,128,61,0.25);
+  border-radius: 9px; padding:9px 13px;
+  font-size:12px; display:none; margin-top:8px;
+}
+
+.customer-found.show { display:block; }
+.customer-name-found { color:var(--success); font-weight:600; font-size:13px; }
+.customer-meta { color:var(--text3); margin-top:2px; }
+
+/* Bill items area */
+.bill-items {
+  flex:1; overflow-y:auto; padding:0;
+  background: #fff;
+}
+
+.bill-empty {
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  height:100%; color:var(--text4); gap:10px;
+  padding:40px;
+}
+
+.bill-empty-icon { font-size:40px; opacity:0.35; }
+.bill-empty-text { font-size:13px; }
+
+.bill-item {
+  display:flex; align-items:center;
+  justify-content:space-between; padding:11px 16px;
+  border-bottom:1px solid var(--border); gap:8px;
+  animation: slideIn 0.18s ease;
+  background:#fff;
+}
+
+.bill-item:hover { background: var(--bg); }
+
+@keyframes slideIn {
+  from { opacity:0; transform:translateX(8px); }
+  to { opacity:1; transform:translateX(0); }
+}
+
+.bill-item-name { font-size:13px; color:var(--text1); flex:1; font-weight:500; line-height:1.3; }
+
+.bill-item-qty {
+  display:flex; align-items:center; gap:6px;
+}
+
+.qty-btn {
+  width:22px; height:22px; border-radius:6px;
+  border:1.5px solid var(--border2);
+  background:#fff; color:var(--text1);
+  cursor:pointer; font-size:14px;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s; font-weight:600;
+}
+
+.qty-btn:hover { background:var(--saffron-bg); border-color:var(--saffron); color:var(--saffron); }
+.qty-val { font-family:'JetBrains Mono',monospace; font-size:13px; min-width:22px; text-align:center; font-weight:600; color:var(--text2); }
+.bill-item-amount { font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--saffron); min-width:60px; text-align:right; font-weight:500; }
+
+.remove-btn {
+  width:20px; height:20px; border-radius:5px;
+  border:none; background:var(--red-bg);
+  color:var(--danger); cursor:pointer; font-size:11px;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s; font-weight:700;
+}
+
+.remove-btn:hover { background:var(--danger); color:#fff; }
+
+/* Bill footer */
+.bill-footer {
+  border-top: 1px solid var(--border);
+  padding: 14px 16px;
+  background: #fff;
+}
+
+.bill-subtotals { margin-bottom:12px; }
+
+.subtotal-row {
+  display:flex; justify-content:space-between;
+  align-items:center; padding:4px 0; font-size:13px;
+}
+
+.subtotal-label { color:var(--text3); }
+.subtotal-val { font-family:'JetBrains Mono',monospace; color:var(--text2); font-weight:500; }
+.subtotal-val.expense { color:var(--danger); }
+
+.total-row {
+  display:flex; justify-content:space-between; align-items:center;
+  background: var(--saffron-bg);
+  border: 1.5px solid rgba(224,123,0,0.25);
+  border-radius: var(--radius); padding:12px 14px; margin-bottom:12px;
+}
+
+.total-label {
+  font-family:'Rajdhani',sans-serif;
+  font-weight:700; font-size:17px; letter-spacing:1px; color:var(--text1);
+}
+
+.total-amount {
+  font-family:'JetBrains Mono',monospace;
+  font-size:22px; color:var(--saffron); font-weight:500;
+}
+
+.action-btns {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:8px; margin-bottom:10px;
+}
+
+.btn {
+  padding:10px 16px; border-radius:9px;
+  font-size:13px; font-weight:600; cursor:pointer;
+  border:none; transition:all 0.18s;
+  font-family:'DM Sans',sans-serif; letter-spacing:0.3px;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+
+.btn-primary {
+  background: var(--saffron); color:#fff;
+  grid-column: span 2;
+  font-size: 14px; padding:12px;
+  box-shadow: 0 2px 8px rgba(224,123,0,0.3);
+}
+
+.btn-primary:hover { background:#c96e00; box-shadow:0 4px 12px rgba(224,123,0,0.4); }
+
+.btn-secondary {
+  background: var(--bg); color:var(--text2);
+  border: 1.5px solid var(--border);
+}
+
+.btn-secondary:hover { border-color:var(--saffron); color:var(--saffron); background:var(--saffron-bg); }
+
+.btn-danger {
+  background: var(--red-bg); color:var(--danger);
+  border: 1.5px solid rgba(220,38,38,0.2);
+}
+
+.btn-danger:hover { background:var(--danger); color:#fff; }
+
+.btn-expense {
+  background: var(--warning-bg); color:var(--warning);
+  border: 1.5px solid rgba(180,83,9,0.2);
+  grid-column: span 2;
+}
+
+.btn-expense:hover { background:var(--warning); color:#fff; }
+
+/* Target bar */
+.target-bar-wrap { margin-top:6px; }
+
+.target-info {
+  display:flex; justify-content:space-between;
+  font-size:11px; color:var(--text3); margin-bottom:5px;
+}
+
+.target-bar {
+  height:6px; background:var(--bg2);
+  border-radius:3px; overflow:hidden;
+}
+
+.target-fill {
+  height:100%;
+  background: linear-gradient(90deg, var(--saffron), var(--green));
+  border-radius:3px; transition:width 0.5s ease;
+}
+
+/* ===== DASHBOARD ===== */
+.dash-layout { padding:20px; overflow-y:auto; width:100%; background:var(--bg); }
+
+.dash-greeting { margin-bottom:20px; }
+.dash-greeting h2 { font-family:'Rajdhani',sans-serif; font-size:24px; font-weight:700; color:var(--text1); }
+.dash-greeting p { font-size:13px; color:var(--text3); margin-top:3px; }
+
+/* KPI Cards */
+.kpi-grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:12px; margin-bottom:20px;
+}
+
+.kpi-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  position:relative; overflow:hidden;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.18s;
+}
+
+.kpi-card:hover { box-shadow: var(--shadow-md); }
+
+.kpi-card::after {
+  content:''; position:absolute;
+  bottom:0; left:0; right:0; height:3px;
+  background: var(--accent-color, var(--saffron));
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.kpi-label { font-size:11px; color:var(--text3); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px; font-weight:500; }
+.kpi-value { font-family:'JetBrains Mono',monospace; font-size:24px; font-weight:500; color:var(--text1); margin-bottom:6px; }
+.kpi-change { font-size:12px; }
+.kpi-change.up { color:var(--success); }
+.kpi-change.down { color:var(--danger); }
+.kpi-sub { font-size:11px; color:var(--text3); margin-top:3px; }
+
+/* Charts row */
+.charts-row {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:12px; margin-bottom:20px;
+}
+
+.chart-card {
+  background:#fff; border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:18px;
+  box-shadow: var(--shadow);
+}
+
+.chart-title {
+  font-family:'Rajdhani',sans-serif; font-size:12px;
+  font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--text3); margin-bottom:16px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+
+.period-toggle { display:flex; gap:4px; }
+
+.period-btn {
+  padding:3px 9px; border-radius:5px; font-size:11px;
+  cursor:pointer; border:1px solid var(--border);
+  background:none; color:var(--text3); font-family:'DM Sans',sans-serif;
+  transition:all 0.15s;
+}
+
+.period-btn.active {
+  background:var(--saffron-bg); border-color:rgba(224,123,0,0.3); color:var(--saffron);
+}
+
+/* Bar chart */
+.bar-chart {
+  display:flex; align-items:flex-end; gap:6px;
+  height:130px; padding-bottom:22px; position:relative;
+}
+
+.bar-wrap {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; height:100%;
+  justify-content:flex-end; gap:5px;
+}
+
+.bar {
+  width:100%; border-radius:5px 5px 0 0;
+  background: linear-gradient(180deg, var(--saffron) 0%, rgba(224,123,0,0.4) 100%);
+  transition:height 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  position:relative; cursor:pointer; min-height:3px;
+}
+
+.bar:hover { background:var(--saffron); }
+.bar.today-bar { background:linear-gradient(180deg, var(--blue) 0%, rgba(29,78,216,0.4) 100%); }
+.bar.today-bar:hover { background:var(--blue); }
+
+.bar-label { font-size:10px; color:var(--text3); white-space:nowrap; font-weight:500; }
+
+.bar-val {
+  font-family:'JetBrains Mono',monospace; font-size:9px;
+  color:var(--text2); position:absolute; top:-17px;
+  left:50%; transform:translateX(-50%); white-space:nowrap;
+}
+
+/* Top services table */
+.top-table { width:100%; border-collapse:collapse; }
+
+.top-table th {
+  font-size:11px; color:var(--text3); letter-spacing:1px;
+  text-transform:uppercase; text-align:left;
+  padding:0 0 10px; border-bottom:1px solid var(--border); font-weight:600;
+}
+
+.top-table th:last-child { text-align:right; }
+
+.top-table td {
+  padding:10px 0; font-size:13px;
+  border-bottom:1px solid var(--border); vertical-align:middle;
+}
+
+.top-table tr:last-child td { border-bottom:none; }
+
+.rank-badge {
+  width:22px; height:22px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; margin-right:8px;
+}
+
+.rank-1 { background:rgba(180,83,9,0.12); color:#b45309; }
+.rank-2 { background:rgba(100,116,139,0.12); color:#64748b; }
+.rank-3 { background:rgba(180,83,9,0.08); color:#92400e; }
+.rank-other { background:var(--bg2); color:var(--text3); }
+
+.svc-bar-mini { height:3px; background:var(--bg2); border-radius:2px; margin-top:4px; overflow:hidden; }
+.svc-bar-fill { height:100%; border-radius:2px; background:var(--saffron); }
+
+.td-right { text-align:right; font-family:'JetBrains Mono',monospace; color:var(--saffron); font-weight:500; }
+.td-count { color:var(--text3); text-align:right; font-family:'JetBrains Mono',monospace; }
+
+/* Insights */
+.insights-row {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:12px; margin-bottom:20px;
+}
+
+.insight-card {
+  background:#fff; border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:18px;
+  box-shadow: var(--shadow);
+}
+
+.insight-item {
+  display:flex; gap:10px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px solid var(--border);
+}
+
+.insight-item:last-child { border-bottom:none; padding-bottom:0; }
+.insight-item:first-child { padding-top:0; }
+
+.insight-dot {
+  width:8px; height:8px; border-radius:50%;
+  margin-top:5px; flex-shrink:0;
+}
+
+.insight-dot.warn { background:var(--warning); }
+.insight-dot.info { background:var(--info); }
+.insight-dot.good { background:var(--success); }
+.insight-dot.danger { background:var(--danger); }
+
+.insight-text { font-size:13px; color:var(--text2); line-height:1.5; }
+.insight-text strong { color:var(--text1); }
+
+/* Heatmap */
+.heatmap-grid {
+  display:grid;
+  grid-template-columns: 60px repeat(7,1fr);
+  gap:3px; font-size:10px;
+}
+
+.hm-header { color:var(--text3); text-align:center; padding:3px; font-weight:600; font-size:11px; }
+.hm-label { color:var(--text3); display:flex; align-items:center; font-size:10px; }
+
+.hm-cell {
+  height:26px; border-radius:4px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono',monospace; font-size:10px;
+  cursor:pointer; transition:transform 0.15s; color:var(--text2);
+}
+
+.hm-cell:hover { transform:scale(1.1); }
+
+/* ===== CUSTOMERS ===== */
+.customers-layout { padding:20px; overflow-y:auto; width:100%; background:var(--bg); }
+
+.cust-search-bar { display:flex; gap:10px; margin-bottom:20px; }
+
+.cust-search-bar input {
+  flex:1; background:#fff; border:1.5px solid var(--border);
+  border-radius:var(--radius); padding:12px 16px;
+  color:var(--text1); font-family:'DM Sans',sans-serif;
+  font-size:14px; outline:none; transition:border-color 0.18s;
+  box-shadow: var(--shadow);
+}
+
+.cust-search-bar input:focus { border-color:var(--saffron); }
+
+.customer-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:12px;
+}
+
+.customer-card {
+  background:#fff; border:1.5px solid var(--border);
+  border-radius:var(--radius-lg); padding:16px;
+  cursor:pointer; transition:all 0.18s;
+  box-shadow: var(--shadow);
+}
+
+.customer-card:hover {
+  border-color:var(--saffron);
+  box-shadow: var(--shadow-md);
+  transform:translateY(-2px);
+}
+
+.cust-card-top { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+
+.cust-avatar {
+  width:42px; height:42px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Rajdhani',sans-serif; font-weight:700; font-size:17px;
+  flex-shrink:0;
+}
+
+.cust-info .cust-name { font-size:15px; font-weight:600; color:var(--text1); }
+.cust-info .cust-mobile { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text3); margin-top:2px; }
+
+.cust-stats {
+  display:grid; grid-template-columns:1fr 1fr 1fr;
+  gap:8px; padding-top:12px; border-top:1px solid var(--border);
+}
+
+.cust-stat-label { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; font-weight:600; }
+.cust-stat-val { font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--text1); margin-top:3px; font-weight:500; }
+.cust-stat-val.money { color:var(--saffron); }
+.cust-last-visit { font-size:11px; color:var(--text3); margin-top:8px; }
+.cust-last-visit span { color:var(--success); font-weight:600; }
+
+/* ===== MODALS ===== */
+.modal-overlay {
+  position:fixed; inset:0;
+  background:rgba(15,23,42,0.5);
+  backdrop-filter:blur(3px);
+  z-index:200;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 0.2s;
+}
+
+.modal-overlay.show { opacity:1; pointer-events:all; }
+
+.modal {
+  background:#fff; border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:24px;
+  width:380px; max-width:92vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  transform:scale(0.95); transition:transform 0.2s;
+}
+
+.modal-overlay.show .modal { transform:scale(1); }
+
+.modal-title {
+  font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700;
+  color:var(--text1); margin-bottom:18px;
+}
+
+.modal-field { margin-bottom:14px; }
+
+.modal-label {
+  font-size:11px; color:var(--text3); letter-spacing:1px;
+  text-transform:uppercase; margin-bottom:7px; display:block; font-weight:600;
+}
+
+.modal-input {
+  width:100%; background:var(--bg); border:1.5px solid var(--border);
+  border-radius:9px; padding:11px 14px;
+  color:var(--text1); font-family:'DM Sans',sans-serif;
+  font-size:14px; outline:none; transition:border-color 0.18s;
+}
+
+.modal-input:focus { border-color:var(--saffron); }
+
+.modal-actions { display:flex; gap:8px; margin-top:20px; }
+.modal-actions .btn { flex:1; padding:12px; }
+
+/* AEPS */
+.aeps-amounts {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:8px; margin:14px 0;
+}
+
+.aeps-quick {
+  background:var(--bg); border:1.5px solid var(--border);
+  border-radius:9px; padding:10px;
+  text-align:center; cursor:pointer; transition:all 0.15s;
+}
+
+.aeps-quick:hover {
+  border-color:var(--saffron);
+  background:var(--saffron-bg);
+}
+
+.aeps-quick-amt { font-size:13px; color:var(--text1); font-weight:600; }
+.aeps-quick-comm { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--saffron); margin-top:3px; font-weight:500; }
+
+/* Expense */
+.expense-cats {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:6px; margin:10px 0;
+}
+
+.exp-cat-btn {
+  padding:9px 8px; border-radius:7px;
+  border:1.5px solid var(--border);
+  background:var(--bg); color:var(--text2);
+  font-size:12px; cursor:pointer; text-align:center;
+  transition:all 0.15s; font-family:'DM Sans',sans-serif; font-weight:500;
+}
+
+.exp-cat-btn:hover, .exp-cat-btn.selected {
+  border-color:var(--warning);
+  background:var(--warning-bg); color:var(--warning);
+}
+
+/* ===== ANALYTICS ===== */
+.analytics-layout { padding:20px; overflow-y:auto; width:100%; background:var(--bg); }
+
+.analytics-tabs {
+  display:flex; gap:6px; margin-bottom:20px;
+  background:#fff; border:1px solid var(--border);
+  border-radius:var(--radius); padding:4px; width:fit-content;
+  box-shadow: var(--shadow);
+}
+
+.analytics-tab {
+  padding:8px 22px; border-radius:7px;
+  font-size:13px; font-weight:500; cursor:pointer;
+  border:none; background:none; color:var(--text3);
+  font-family:'DM Sans',sans-serif; transition:all 0.18s;
+}
+
+.analytics-tab.active {
+  background:var(--saffron-bg); color:var(--saffron);
+  border:1px solid rgba(224,123,0,0.2);
+}
+
+.analytics-content { display:none; }
+.analytics-content.active { display:block; }
+
+/* ===== REPORTS ===== */
+.reports-layout { padding:20px; overflow-y:auto; width:100%; background:var(--bg); }
+
+.report-controls { display:flex; gap:10px; align-items:center; margin-bottom:20px; }
+
+.report-date {
+  background:#fff; border:1.5px solid var(--border);
+  border-radius:9px; padding:9px 14px; color:var(--text1);
+  font-family:'DM Sans',sans-serif; font-size:13px; outline:none;
+  box-shadow: var(--shadow);
+}
+
+.daybook-table {
+  width:100%; border-collapse:collapse; background:#fff;
+  border:1px solid var(--border); border-radius:var(--radius-lg);
+  overflow:hidden; margin-bottom:16px; box-shadow: var(--shadow);
+}
+
+.daybook-table th {
+  background:var(--bg2); font-size:11px; color:var(--text3);
+  letter-spacing:1.5px; text-transform:uppercase;
+  padding:13px 16px; text-align:left; border-bottom:1px solid var(--border); font-weight:600;
+}
+
+.daybook-table td {
+  padding:13px 16px; font-size:13px;
+  border-bottom:1px solid var(--border); color:var(--text1);
+}
+
+.daybook-table tr:last-child td { border-bottom:none; }
+.daybook-table tr:hover td { background:var(--bg); }
+
+.td-time { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text3); }
+.td-amount-pos { font-family:'JetBrains Mono',monospace; color:var(--success); text-align:right; font-weight:600; }
+.td-amount-neg { font-family:'JetBrains Mono',monospace; color:var(--danger); text-align:right; font-weight:600; }
+
+.report-summary {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+
+.summary-card {
+  background:#fff; border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:18px; text-align:center;
+  box-shadow: var(--shadow);
+}
+
+.summary-label { font-size:11px; color:var(--text3); letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; font-weight:600; }
+.summary-value { font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:500; color:var(--text1); }
+.summary-value.income { color:var(--success); }
+.summary-value.expense { color:var(--danger); }
+.summary-value.profit { color:var(--saffron); }
+
+/* ===== SETTINGS ===== */
+.settings-layout { padding:20px; overflow-y:auto; width:100%; max-width:100%; margin:0 auto; background:var(--bg); }
+
+.settings-section {
+  background:#fff; border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:20px;
+  margin-bottom:16px; box-shadow: var(--shadow);
+}
+
+.settings-section-title {
+  font-family:'Rajdhani',sans-serif; font-size:15px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  color:var(--saffron); margin-bottom:16px;
+  padding-bottom:10px; border-bottom:1px solid var(--border);
+}
+
+.setting-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:11px 0; border-bottom:1px solid var(--border);
+}
+
+.setting-row:last-child { border-bottom:none; }
+.setting-key { font-size:14px; color:var(--text2); font-weight:500; }
+
+.setting-val {
+  font-family:'JetBrains Mono',monospace; font-size:13px;
+  color:var(--info); background:var(--info-bg);
+  padding:6px 12px; border-radius:7px;
+  border:1.5px solid transparent; outline:none;
+  width:160px; text-align:right; transition:border-color 0.18s;
+  cursor:text;
+}
+
+.setting-val:focus { border-color:var(--saffron); background:#fff; }
+
+/* Service edit table */
+.svc-edit-table { width:100%; border-collapse:collapse; }
+.svc-edit-table th {
+  font-size:11px; color:var(--text3); text-transform:uppercase;
+  letter-spacing:1px; padding:0 0 10px; border-bottom:1px solid var(--border);
+  text-align:left; font-weight:600;
+}
+
+.svc-edit-table td {
+  padding:9px 0; border-bottom:1px solid var(--border);
+  font-size:13px; vertical-align:middle;
+}
+
+.svc-edit-table tr:last-child td { border-bottom:none; }
+
+.svc-edit-icon { font-size:18px; margin-right:8px; }
+
+.svc-edit-name {
+  background:none; border:none; outline:none;
+  font-family:'DM Sans',sans-serif; font-size:13px;
+  color:var(--text1); width:140px; padding:3px 6px;
+  border-radius:5px; transition:background 0.15s;
+}
+
+.svc-edit-name:focus { background:var(--bg); }
+
+.svc-edit-price {
+  font-family:'JetBrains Mono',monospace; font-size:13px;
+  color:var(--saffron); width:80px; text-align:right;
+  padding:4px 8px; background:var(--saffron-bg);
+  border:1.5px solid transparent; border-radius:6px;
+  outline:none; transition:border-color 0.15s;
+}
+
+.svc-edit-price:focus { border-color:var(--saffron); }
+.svc-edit-price:disabled { background:var(--bg2); color:var(--text4); cursor:not-allowed; }
+
+/* ===== SERVICE MANAGER ===== */
+.svc-mgr-row {
+  display: grid;
+  grid-template-columns: 38px minmax(180px,3fr) 90px 120px 100px 100px 80px 72px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: #fff;
+  border: 1.5px solid var(--border);
+  margin-bottom: 7px;
+  transition: all 0.15s;
+}
+
+.svc-mgr-row:hover { border-color: var(--border2); box-shadow: var(--shadow); }
+
+.svc-mgr-row.editing { border-color: var(--saffron); background: var(--saffron-bg); }
+
+.svc-mgr-icon { font-size: 22px; text-align: center; }
+
+.svc-mgr-input {
+  background: var(--bg); border: 1px solid var(--border); outline: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: var(--text1);
+  font-weight: 500; width: 100%;
+  padding: 6px 10px; border-radius: 6px;
+  transition: all 0.15s;
+  display: block;
+  box-sizing: border-box;
+}
+
+.svc-mgr-input:hover { border-color: var(--border2); background: #fff; }
+.svc-mgr-input:focus { background: #fff; border: 1.5px solid var(--saffron); outline: none; box-shadow: 0 0 0 3px rgba(224,123,0,0.08); }
+.svc-mgr-row.editing .svc-mgr-input { background: #fff; }
+
+.svc-mgr-price {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; color: var(--saffron);
+  font-weight: 500; width: 90px;
+  text-align: right; padding: 5px 10px;
+  background: var(--saffron-bg);
+  border: 1.5px solid transparent;
+  border-radius: 6px; outline: none;
+  transition: border-color 0.15s;
+}
+
+.svc-mgr-price:focus { border-color: var(--saffron); }
+.svc-mgr-price:disabled { background: var(--bg2); color: var(--text4); cursor: not-allowed; }
+
+.svc-mgr-cost {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; color: var(--danger);
+  width: 90px; text-align: right;
+  padding: 5px 10px;
+  background: var(--red-bg);
+  border: 1.5px solid transparent;
+  border-radius: 6px; outline: none;
+  transition: border-color 0.15s;
+}
+.svc-mgr-cost:focus { border-color: var(--danger); }
+.svc-mgr-cost:disabled { background: var(--bg2); color: var(--text4); cursor: not-allowed; }
+
+.profit-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; font-weight: 600;
+  padding: 4px 10px; border-radius: 6px;
+  text-align: center; white-space: nowrap;
+  display: inline-block;
+}
+.profit-badge.positive { background: var(--success-bg); color: var(--success); }
+.profit-badge.zero { background: var(--bg2); color: var(--text3); }
+.profit-badge.variable { background: var(--info-bg); color: var(--info); font-size: 12px; }
+
+.svc-mgr-cat {
+  font-size: 12px; padding: 4px 10px;
+  border-radius: 20px; font-weight: 600;
+  white-space: nowrap; display: inline-block;
+}
+
+.cat-pill-banking   { background: #eff6ff; color: #1d4ed8; }
+.cat-pill-documents { background: #fff7ed; color: #e07b00; }
+.cat-pill-govt      { background: #faf5ff; color: #7c3aed; }
+.cat-pill-insurance { background: #f0fdf4; color: #15803d; }
+.cat-pill-printing  { background: #fffbeb; color: #b45309; }
+.cat-pill-travel    { background: #fdf2f8; color: #be185d; }
+
+.svc-mgr-actions { display: flex; gap: 4px; justify-content: flex-end; }
+
+.svc-action-btn {
+  width: 28px; height: 28px;
+  border-radius: 6px; border: 1.5px solid var(--border);
+  background: #fff; cursor: pointer;
+  font-size: 13px; display: flex;
+  align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+
+.svc-action-btn:hover { border-color: var(--danger); background: var(--red-bg); color: var(--danger); }
+.svc-action-btn.edit-btn:hover { border-color: var(--saffron); background: var(--saffron-bg); color: var(--saffron); }
+
+.svc-var-toggle {
+  font-size: 10px; padding: 2px 7px;
+  border-radius: 5px; cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg); color: var(--text3);
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+
+.svc-var-toggle.active { background: var(--info-bg); border-color: var(--info); color: var(--info); }
+
+/* ===== DAILY CLOSING ===== */
+.closing-layout {
+  padding: 20px;
+  overflow-y: auto;
+  width: 100%;
+  background: var(--bg);
+}
+
+.closing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .closing-grid { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: repeat(2,1fr); }
+  .charts-row { grid-template-columns: 1fr; }
+  .insights-row { grid-template-columns: 1fr; }
+  .pos-layout { grid-template-columns: 1fr; }
+  .pos-right { max-height: 50vh; }
+  .services-grid { grid-template-columns: repeat(3,1fr); }
+  .svc-name { font-size: 11px; }
+}
+
+.closing-section {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.closing-section-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.closing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.closing-row:last-child { border-bottom: none; }
+
+.closing-row-label {
+  font-size: 14px;
+  color: var(--text2);
+  font-weight: 500;
+  flex: 1;
+}
+
+.closing-input {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text1);
+  width: 130px;
+  text-align: right;
+  padding: 6px 10px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  outline: none;
+  transition: all 0.15s;
+}
+
+.closing-input:focus {
+  border-color: var(--saffron);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(224,123,0,0.08);
+}
+
+.denom-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.denom-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.denom-label {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.denom-input {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--saffron);
+  width: 100%;
+  text-align: center;
+  padding: 8px 6px;
+  background: var(--saffron-bg);
+  border: 1.5px solid rgba(224,123,0,0.2);
+  border-radius: 7px;
+  outline: none;
+  transition: all 0.15s;
+}
+
+.denom-input:focus {
+  border-color: var(--saffron);
+  background: #fff;
+}
+
+.denom-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--saffron-bg);
+  border: 1px solid rgba(224,123,0,0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 8px;
+}
+
+.closing-result-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+
+.closing-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.closing-result-row:last-child { border-bottom: none; }
+.closing-result-row.total-line {
+  padding: 14px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.closing-result-row.profit-line {
+  background: var(--success-bg);
+  border-radius: 8px;
+  padding: 14px 12px;
+  margin: 8px 0;
+  font-size: 17px;
+  font-weight: 600;
+  border: 1.5px solid rgba(21,128,61,0.2);
+}
+
+.closing-result-row.share-line {
+  background: var(--info-bg);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 8px;
+  border: 1.5px solid rgba(3,105,161,0.2);
+}
+
+.cr-label { color: var(--text2); }
+.cr-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+}
+
+.cr-val.positive { color: var(--success); }
+.cr-val.negative { color: var(--danger); }
+.cr-val.saffron { color: var(--saffron); }
+.cr-val.info { color: var(--info); }
+
+.closing-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.closing-history-item:last-child { border-bottom: none; }
+
+/* ===== CUSTOMER DETAIL ===== */
+.cd-stat-card { background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;text-align:center; }
+.cd-stat-label { font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:600; }
+.cd-stat-val { font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:var(--text1);margin-top:4px; }
+.cd-stat-val.money { color:var(--saffron); }
+.cd-svc-row { display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;background:var(--bg);margin-bottom:5px; }
+.cd-svc-name { font-size:13px;font-weight:500;color:var(--text1); }
+.cd-svc-count { font-size:11px;color:var(--text3);margin-top:2px; }
+.cd-svc-amt { font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--saffron); }
+.cd-txn-row { display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);gap:10px; }
+.cd-txn-row:last-child { border-bottom:none; }
+.cd-txn-name { font-size:13px;color:var(--text1);font-weight:500;flex:1; }
+.cd-txn-date { font-size:11px;color:var(--text3);white-space:nowrap; }
+.cd-txn-amt { font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--saffron);font-weight:600;white-space:nowrap; }
+
+.toast {
+  position:fixed; bottom:20px; right:20px;
+  background:#fff; border:1px solid var(--border);
+  border-radius:var(--radius); padding:12px 20px;
+  font-size:13px; color:var(--text1);
+  z-index:300; display:flex; align-items:center; gap:10px;
+  box-shadow: var(--shadow-md);
+  transform:translateY(80px); opacity:0;
+  transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.toast.show { transform:translateY(0); opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- TOPNAV -->
+<nav class="topnav">
+  <div class="brand">
+    <div class="brand-emblem">SC</div>
+    <div>
+      <div class="brand-name">SIRAJ CSC</div>
+      <div class="brand-sub">Command Center</div>
+    </div>
+  </div>
+
+  <div class="nav-center">
+    <button class="nav-tab active" onclick="showScreen('pos',this)">⚡ POS Billing</button>
+    <button class="nav-tab" onclick="showScreen('dashboard',this)">📊 Dashboard</button>
+    <button class="nav-tab" onclick="showScreen('analytics',this)">📈 Analytics</button>
+    <button class="nav-tab" onclick="showScreen('customers',this)">👥 Customers</button>
+    <button class="nav-tab" onclick="showScreen('reports',this)">📋 Reports</button>
+    <button class="nav-tab" onclick="showScreen('closing',this)" style="color:var(--success);font-weight:600;">🔒 Closing</button>
+    <button class="nav-tab" onclick="showScreen('settings',this)">⚙️ Settings</button>
+  </div>
+
+  <div class="nav-right">
+    <div id="syncStatus" style="font-size:12px;font-weight:500;min-width:80px;text-align:right;"></div>
+    <button onclick="init()" style="background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--text2);font-family:'DM Sans',sans-serif;" title="Sync all data from Google Sheets">↻ Sync</button>
+    <div class="date-badge" id="dateDisplay"></div>
+    <div class="clock" id="clockDisplay">--:--:--</div>
+  </div>
+</nav>
+
+<div class="app-body">
+
+<!-- ===== POS ===== -->
+<div class="screen active" id="screen-pos">
+  <div class="pos-layout">
+    <div class="pos-left">
+      <div class="section-header">
+        <span class="section-title">Services</span>
+        <button class="btn btn-secondary" style="padding:7px 13px;font-size:12px;" onclick="openCustomService()">+ Custom</button>
+      </div>
+      <div class="search-bar">
+        <span style="color:var(--text4);font-size:16px;">🔍</span>
+        <input type="text" placeholder="Search service..." id="serviceSearch" oninput="filterServices()">
+      </div>
+      <div class="cat-filters" id="catFilters">
+        <button class="cat-btn active" onclick="filterCat(this,'all')">All</button>
+        <button class="cat-btn" onclick="filterCat(this,'banking')">Banking</button>
+        <button class="cat-btn" onclick="filterCat(this,'documents')">Documents</button>
+        <button class="cat-btn" onclick="filterCat(this,'insurance')">Insurance</button>
+        <button class="cat-btn" onclick="filterCat(this,'printing')">Printing</button>
+        <button class="cat-btn" onclick="filterCat(this,'govt')">Govt Schemes</button>
+        <button class="cat-btn" onclick="filterCat(this,'travel')">Travel</button>
+      </div>
+      <div class="services-grid" id="servicesGrid"></div>
+    </div>
+
+    <div class="pos-right">
+      <div class="bill-header">
+        <div class="bill-title">CURRENT BILL</div>
+        <div class="customer-section">
+          <input class="customer-input" type="tel" placeholder="📱 Customer mobile..." id="custMobile" maxlength="10" oninput="lookupCustomer()">
+          <button class="btn btn-secondary" style="padding:9px 12px;font-size:12px;" onclick="openAddCustomer()">+ New</button>
+        </div>
+        <div class="customer-found" id="customerFound">
+          <div class="customer-name-found" id="foundName">—</div>
+          <div class="customer-meta" id="foundMeta">—</div>
+        </div>
+      </div>
+
+      <div class="bill-items" id="billItems"></div>
+
+      <div class="bill-footer">
+        <div class="bill-subtotals">
+          <div class="subtotal-row">
+            <span class="subtotal-label">Services Total</span>
+            <span class="subtotal-val" id="subtotalVal">₹0</span>
+          </div>
+          <div class="subtotal-row">
+            <span class="subtotal-label">Govt Cost (deducted)</span>
+            <span class="subtotal-val expense" id="govtCostVal">-₹0</span>
+          </div>
+          <div class="subtotal-row">
+            <span class="subtotal-label">Today's Expenses</span>
+            <span class="subtotal-val expense" id="expenseVal">-₹0</span>
+          </div>
+        </div>
+        <div class="total-row">
+          <div class="total-label">NET TOTAL</div>
+          <div class="total-amount" id="totalAmount">₹0</div>
+        </div>
+        <div class="action-btns">
+          <button class="btn btn-primary" onclick="saveBill()">✓ Save Bill</button>
+          <button class="btn btn-secondary" onclick="printBill()">🖨 Print</button>
+          <button class="btn btn-danger" onclick="clearBill()">✕ Clear</button>
+          <button class="btn btn-expense" onclick="openExpenseModal()">− Add Expense</button>
+        </div>
+        <div class="target-bar-wrap">
+          <div class="target-info">
+            <span>Daily Target Progress</span>
+            <span id="targetProgress">₹0 / ₹5,000</span>
+          </div>
+          <div class="target-bar"><div class="target-fill" id="targetFill" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="screen" id="screen-dashboard">
+  <div class="dash-layout">
+    <div class="dash-greeting">
+      <h2 id="greetingText">Good Morning, Siraj 👋</h2>
+      <p id="greetingDate">Loading...</p>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card" style="--accent-color:var(--saffron)">
+        <div class="kpi-label">Today's Revenue</div>
+        <div class="kpi-value" id="kpiToday">₹0</div>
+        <div class="kpi-change" id="kpiTodayChange">— vs yesterday</div>
+        <div class="kpi-sub" id="kpiTodayTxns">0 transactions</div>
+      </div>
+      <div class="kpi-card" style="--accent-color:var(--blue)">
+        <div class="kpi-label">This Week</div>
+        <div class="kpi-value" id="kpiWeek">₹0</div>
+        <div class="kpi-change" id="kpiWeekChange">7-day total</div>
+        <div class="kpi-sub" id="kpiWeekTxns">0 transactions</div>
+      </div>
+      <div class="kpi-card" style="--accent-color:var(--success)">
+        <div class="kpi-label">This Month</div>
+        <div class="kpi-value" id="kpiMonth">₹0</div>
+        <div class="kpi-change" id="kpiMonthChange">30-day total</div>
+        <div class="kpi-sub" id="kpiMonthTxns">0 transactions</div>
+      </div>
+      <div class="kpi-card" style="--accent-color:var(--warning)">
+        <div class="kpi-label">Net Profit Today</div>
+        <div class="kpi-value" id="kpiProfit">₹0</div>
+        <div class="kpi-change" id="kpiMargin">0% margin</div>
+        <div class="kpi-sub" id="kpiExpenseSub">Expense: ₹0</div>
+      </div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Revenue — Last 7 Days <span style="font-size:10px;color:var(--blue);font-family:'DM Sans',sans-serif;">■ today</span></div>
+        <div class="bar-chart" id="weekBarChart"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Top 5 Services
+          <div class="period-toggle">
+            <button class="period-btn active" onclick="switchTopPeriod(this,'day')">Day</button>
+            <button class="period-btn" onclick="switchTopPeriod(this,'week')">Week</button>
+            <button class="period-btn" onclick="switchTopPeriod(this,'month')">Month</button>
+          </div>
+        </div>
+        <table class="top-table" id="topServicesTable"></table>
+      </div>
+    </div>
+    <div class="insights-row">
+      <div class="insight-card">
+        <div class="chart-title">Smart Insights</div>
+        <div id="insightsList"></div>
+      </div>
+      <div class="insight-card">
+        <div class="chart-title">Top Customers — Today</div>
+        <div id="topCustomersToday"></div>
+      </div>
+    </div>
+    <div class="chart-card" style="margin-bottom:20px;">
+      <div class="chart-title">Activity Heatmap — This Week</div>
+      <div class="heatmap-grid" id="heatmapGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ANALYTICS ===== -->
+<div class="screen" id="screen-analytics">
+  <div class="analytics-layout">
+    <div class="analytics-tabs">
+      <button class="analytics-tab active" onclick="switchAnalytics(this,'daily')">Daily</button>
+      <button class="analytics-tab" onclick="switchAnalytics(this,'weekly')">Weekly</button>
+      <button class="analytics-tab" onclick="switchAnalytics(this,'monthly')">Monthly</button>
+    </div>
+    <div class="analytics-content active" id="analytics-daily">
+      <div class="kpi-grid" style="margin-bottom:16px">
+        <div class="kpi-card" style="--accent-color:var(--saffron)"><div class="kpi-label">Gross Income</div><div class="kpi-value" id="an-gross">₹0</div></div>
+        <div class="kpi-card" style="--accent-color:var(--danger)"><div class="kpi-label">Total Expense</div><div class="kpi-value" id="an-expense">₹0</div></div>
+        <div class="kpi-card" style="--accent-color:var(--success)"><div class="kpi-label">Net Profit</div><div class="kpi-value" id="an-profit">₹0</div></div>
+        <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">Avg Bill</div><div class="kpi-value" id="an-avg">₹0</div></div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card"><div class="chart-title">Top 5 Services — Today</div><table class="top-table" id="an-top-daily"></table></div>
+        <div class="chart-card"><div class="chart-title">Top 5 Customers — Today</div><div id="an-top-cust-daily"></div></div>
+      </div>
+    </div>
+    <div class="analytics-content" id="analytics-weekly">
+      <div class="kpi-grid" style="margin-bottom:16px">
+        <div class="kpi-card" style="--accent-color:var(--saffron)"><div class="kpi-label">Week Revenue</div><div class="kpi-value" id="an-week-rev">₹0</div></div>
+        <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">Transactions</div><div class="kpi-value" id="an-week-txns">0</div></div>
+        <div class="kpi-card" style="--accent-color:var(--success)"><div class="kpi-label">Best Day</div><div class="kpi-value" id="an-week-best" style="font-size:18px">—</div></div>
+        <div class="kpi-card" style="--accent-color:var(--warning)"><div class="kpi-label">Daily Avg</div><div class="kpi-value" id="an-week-avg">₹0</div></div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card"><div class="chart-title">Top 5 Services — This Week</div><table class="top-table" id="an-top-weekly"></table></div>
+        <div class="chart-card"><div class="chart-title">Top 5 Customers — This Week</div><div id="an-top-cust-weekly"></div></div>
+      </div>
+    </div>
+    <div class="analytics-content" id="analytics-monthly">
+      <div class="kpi-grid" style="margin-bottom:16px">
+        <div class="kpi-card" style="--accent-color:var(--saffron)"><div class="kpi-label">Month Revenue</div><div class="kpi-value" id="an-month-rev">₹0</div></div>
+        <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">Transactions</div><div class="kpi-value" id="an-month-txns">0</div></div>
+        <div class="kpi-card" style="--accent-color:var(--success)"><div class="kpi-label">Best Week</div><div class="kpi-value" id="an-month-best" style="font-size:18px">—</div></div>
+        <div class="kpi-card" style="--accent-color:var(--warning)"><div class="kpi-label">Daily Avg</div><div class="kpi-value" id="an-month-avg">₹0</div></div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card"><div class="chart-title">Top 5 Services — This Month</div><table class="top-table" id="an-top-monthly"></table></div>
+        <div class="chart-card"><div class="chart-title">Top 5 Customers — This Month</div><div id="an-top-cust-monthly"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CUSTOMERS ===== -->
+<div class="screen" id="screen-customers">
+  <div class="customers-layout">
+    <div class="section-header" style="margin-bottom:16px">
+      <span class="section-title">Customer Directory</span>
+      <button class="btn btn-secondary" style="padding:9px 16px;font-size:13px;" onclick="openAddCustomer()">+ Add Customer</button>
+    </div>
+    <div class="cust-search-bar">
+      <input type="text" placeholder="🔍  Search by name or mobile..." id="custSearch" oninput="renderCustomers()">
+    </div>
+    <div id="custStatsRow" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;"></div>
+    <div class="customer-grid" id="customerGrid"></div>
+  </div>
+</div>
+
+<!-- ===== REPORTS ===== -->
+<div class="screen" id="screen-reports">
+  <div class="reports-layout">
+    <div class="section-header" style="margin-bottom:16px">
+      <span class="section-title">Day Book</span>
+      <button class="btn btn-secondary" style="padding:9px 16px;font-size:13px;" onclick="window.print()">🖨 Print Report</button>
+    </div>
+    <div class="report-controls">
+      <input type="date" class="report-date" id="reportDate" onchange="renderReport()">
+      <button class="btn btn-secondary" style="padding:9px 14px;font-size:13px;" onclick="exportData()">⬇ Export Backup</button>
+    </div>
+    <div class="report-summary" id="reportSummary" style="margin-bottom:16px;grid-template-columns:repeat(4,1fr);"></div>
+    <table class="daybook-table" id="daybookTable"></table>
+  </div>
+</div>
+
+<!-- ===== DAILY CLOSING ===== -->
+<div class="screen" id="screen-closing">
+  <div class="closing-layout">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2 style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--text1);">🔒 Daily Closing</h2>
+        <p style="font-size:13px;color:var(--text3);margin-top:2px;" id="closingDateLabel">Loading...</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input type="date" id="closingDate" class="report-date" onchange="updateClosingDate()">
+        <button class="btn btn-secondary" style="padding:9px 14px;font-size:13px;" onclick="loadPreviousClosing()">↩ Load Previous</button>
+        <button class="btn btn-primary" style="padding:9px 20px;font-size:13px;" onclick="saveClosing()">💾 Save Closing</button>
+      </div>
+    </div>
+
+    <!-- Auto-filled from POS -->
+    <div style="background:var(--info-bg);border:1px solid rgba(3,105,161,0.2);border-radius:var(--radius);padding:10px 16px;margin-bottom:16px;font-size:13px;color:var(--info);">
+      ℹ️ POS se aaj ke transactions automatically load hote hain. Sirf cash counts aur wallet balances manually enter karo.
+    </div>
+
+    <div class="closing-grid">
+
+      <!-- LEFT COLUMN -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <!-- Cash Denominations -->
+        <div class="closing-section">
+          <div class="closing-section-title">💵 Cash Count — AEPS Collections</div>
+          <div class="denom-grid">
+            <div class="denom-item">
+              <div class="denom-label">₹500 × ?</div>
+              <input class="denom-input" id="d500" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0">
+              <div style="font-size:10px;color:var(--text3);text-align:center;" id="d500total">= ₹0</div>
+            </div>
+            <div class="denom-item">
+              <div class="denom-label">₹200 × ?</div>
+              <input class="denom-input" id="d200" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0">
+              <div style="font-size:10px;color:var(--text3);text-align:center;" id="d200total">= ₹0</div>
+            </div>
+            <div class="denom-item">
+              <div class="denom-label">₹100 × ?</div>
+              <input class="denom-input" id="d100" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0">
+              <div style="font-size:10px;color:var(--text3);text-align:center;" id="d100total">= ₹0</div>
+            </div>
+            <div class="denom-item">
+              <div class="denom-label">₹50 × ?</div>
+              <input class="denom-input" id="d50" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0">
+              <div style="font-size:10px;color:var(--text3);text-align:center;" id="d50total">= ₹0</div>
+            </div>
+            <div class="denom-item">
+              <div class="denom-label">₹20 × ?</div>
+              <input class="denom-input" id="d20" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0">
+              <div style="font-size:10px;color:var(--text3);text-align:center;" id="d20total">= ₹0</div>
+            </div>
+            <div class="denom-item">
+              <div class="denom-label">₹10 × ?</div>
+              <input class="denom-input" id="d10" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0">
+              <div style="font-size:10px;color:var(--text3);text-align:center;" id="d10total">= ₹0</div>
+            </div>
+          </div>
+          <div class="denom-total-row">
+            <span style="font-size:13px;font-weight:600;color:var(--text2);">Total AEPS Cash</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:var(--saffron);" id="aepsCashTotal">₹0</span>
+          </div>
+          <div style="margin-top:12px;">
+            <div style="font-size:12px;font-weight:700;letter-spacing:0.5px;color:var(--text3);margin-bottom:8px;">COINS</div>
+            <div class="denom-grid" style="grid-template-columns:repeat(4,1fr);">
+              <div class="denom-item">
+                <div class="denom-label">₹10 × ?</div>
+                <input class="denom-input" id="c10" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0" style="background:var(--info-bg);color:var(--info);border-color:rgba(3,105,161,0.2);">
+                <div style="font-size:10px;color:var(--text3);text-align:center;" id="c10total">= ₹0</div>
+              </div>
+              <div class="denom-item">
+                <div class="denom-label">₹5 × ?</div>
+                <input class="denom-input" id="c5" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0" style="background:var(--info-bg);color:var(--info);border-color:rgba(3,105,161,0.2);">
+                <div style="font-size:10px;color:var(--text3);text-align:center;" id="c5total">= ₹0</div>
+              </div>
+              <div class="denom-item">
+                <div class="denom-label">₹2 × ?</div>
+                <input class="denom-input" id="c2" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0" style="background:var(--info-bg);color:var(--info);border-color:rgba(3,105,161,0.2);">
+                <div style="font-size:10px;color:var(--text3);text-align:center;" id="c2total">= ₹0</div>
+              </div>
+              <div class="denom-item">
+                <div class="denom-label">₹1 × ?</div>
+                <input class="denom-input" id="c1" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0" style="background:var(--info-bg);color:var(--info);border-color:rgba(3,105,161,0.2);">
+                <div style="font-size:10px;color:var(--text3);text-align:center;" id="c1total">= ₹0</div>
+              </div>
+            </div>
+            <div class="denom-total-row" style="background:var(--info-bg);border-color:rgba(3,105,161,0.2);margin-top:8px;">
+              <span style="font-size:13px;font-weight:600;color:var(--text2);">Total Coins</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:var(--info);" id="coinsTotal">₹0</span>
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <div class="closing-row">
+              <span class="closing-row-label">Mix / Other Coins</span>
+              <input class="closing-input" id="mixCoins" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- Wallet Balances -->
+        <div class="closing-section">
+          <div class="closing-section-title">💼 Wallet & Account Balances</div>
+          <div class="closing-row">
+            <span class="closing-row-label">A/c (Bank Balance)</span>
+            <input class="closing-input" id="acBalance" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0">
+          </div>
+          <div class="closing-row">
+            <span class="closing-row-label">CSC Wallet</span>
+            <input class="closing-input" id="cscWallet" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0">
+          </div>
+          <div class="closing-row">
+            <span class="closing-row-label">Digi / Digipay</span>
+            <input class="closing-input" id="digiWallet" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0">
+          </div>
+          <div class="closing-row">
+            <span class="closing-row-label">Jio BC</span>
+            <input class="closing-input" id="jioBc" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0">
+          </div>
+          <div class="closing-row">
+            <span class="closing-row-label">SC Charges</span>
+            <input class="closing-input" id="scCharges" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <!-- Deductions -->
+        <div class="closing-section">
+          <div class="closing-section-title">➖ Deductions</div>
+          <div class="closing-row">
+            <span class="closing-row-label">Rotation (Previous Closing)</span>
+            <input class="closing-input" id="rotation" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0">
+          </div>
+          <div class="closing-row">
+            <span class="closing-row-label">− Aadhaar Request Cost</span>
+            <input class="closing-input" id="aadhaarCost" type="number" min="0" value="0" oninput="calcClosing()" placeholder="0">
+          </div>
+          <div style="margin-top:12px;">
+            <div style="font-size:12px;color:var(--text3);font-weight:600;letter-spacing:0.5px;margin-bottom:8px;">EXTRA EXPENSES (add karo)</div>
+            <div id="expensesList"></div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <input class="closing-input" id="newExpLabel" placeholder="Expense name..." style="flex:1;width:auto;text-align:left;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text1);">
+              <input class="closing-input" id="newExpAmt" type="number" placeholder="Amount" style="width:100px;">
+              <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="addClosingExpense()">+ Add</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- POS Data (Auto) -->
+        <div class="closing-section">
+          <div class="closing-section-title">📊 POS Data (Auto-filled)</div>
+          <div class="closing-row">
+            <span class="closing-row-label">POS Revenue Today</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--success);" id="posRevenue">₹0</span>
+          </div>
+          <div class="closing-row">
+            <span class="closing-row-label">POS Transactions</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text2);" id="posTxns">0</span>
+          </div>
+          <div class="closing-row">
+            <span class="closing-row-label">POS Govt Costs</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--danger);" id="posGovtCost">₹0</span>
+          </div>
+          <div class="closing-row">
+            <span class="closing-row-label">POS Expenses</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--danger);" id="posExpenses">₹0</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RESULT CARD -->
+    <div class="closing-result-card">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">
+        📋 Closing Summary
+      </div>
+
+      <div class="closing-result-row">
+        <span class="cr-label">AEPS Cash Collected</span>
+        <span class="cr-val saffron" id="res-aeps">₹0</span>
+      </div>
+      <div class="closing-result-row">
+        <span class="cr-label">+ Mix Coins</span>
+        <span class="cr-val saffron" id="res-coins">₹0</span>
+      </div>
+      <div class="closing-result-row">
+        <span class="cr-label">+ A/c Balance</span>
+        <span class="cr-val saffron" id="res-ac">₹0</span>
+      </div>
+      <div class="closing-result-row">
+        <span class="cr-label">+ CSC Wallet</span>
+        <span class="cr-val saffron" id="res-csc">₹0</span>
+      </div>
+      <div class="closing-result-row">
+        <span class="cr-label">+ Digi / Digipay</span>
+        <span class="cr-val saffron" id="res-digi">₹0</span>
+      </div>
+      <div class="closing-result-row">
+        <span class="cr-label">+ Jio BC</span>
+        <span class="cr-val saffron" id="res-jio">₹0</span>
+      </div>
+      <div class="closing-result-row">
+        <span class="cr-label">+ SC Charges</span>
+        <span class="cr-val saffron" id="res-sc">₹0</span>
+      </div>
+      <div class="closing-result-row total-line" style="background:var(--bg);border-radius:8px;padding:12px;margin:8px 0;">
+        <span class="cr-label" style="color:var(--text1);font-size:16px;">= Total Collected</span>
+        <span class="cr-val saffron" id="res-total" style="font-size:20px;">₹0</span>
+      </div>
+      <div class="closing-result-row">
+        <span class="cr-label">− Rotation (Previous Closing)</span>
+        <span class="cr-val negative" id="res-rotation">₹0</span>
+      </div>
+      <div class="closing-result-row">
+        <span class="cr-label">− Aadhaar Request Cost</span>
+        <span class="cr-val negative" id="res-aadhaar">₹0</span>
+      </div>
+      <div class="closing-result-row">
+        <span class="cr-label">− Extra Expenses</span>
+        <span class="cr-val negative" id="res-extra-exp">₹0</span>
+      </div>
+      <div class="closing-result-row">
+        <span class="cr-label">− POS Govt Costs</span>
+        <span class="cr-val negative" id="res-pos-govt">₹0</span>
+      </div>
+
+      <div class="closing-result-row profit-line">
+        <span style="color:var(--success);font-size:18px;">🟢 Net Profit</span>
+        <span class="cr-val positive" id="res-profit" style="font-size:24px;">₹0</span>
+      </div>
+
+      <div class="closing-result-row share-line">
+        <div>
+          <div style="font-size:12px;color:var(--info);font-weight:600;letter-spacing:0.5px;">SIRAJ (50%)</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;color:var(--info);" id="res-siraj">₹0</div>
+        </div>
+        <div style="width:1px;height:40px;background:rgba(3,105,161,0.2);"></div>
+        <div style="text-align:right;">
+          <div style="font-size:12px;color:var(--info);font-weight:600;letter-spacing:0.5px;">SOHAIL (50%)</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;color:var(--info);" id="res-sohail">₹0</div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" style="padding:11px 24px;" onclick="saveClosing()">💾 Save Closing</button>
+        <button class="btn btn-secondary" style="padding:11px 16px;" onclick="printClosing()">🖨 Print</button>
+        <button class="btn btn-secondary" style="padding:11px 16px;" onclick="resetClosing()">🔄 Reset</button>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="closing-section">
+      <div class="closing-section-title">📅 Closing History</div>
+      <div id="closingHistory"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== SETTINGS ===== -->
+<div class="screen" id="screen-settings">
+  <div class="settings-layout">
+    <div class="settings-section">
+      <div class="settings-section-title">Shop Configuration</div>
+      <div class="setting-row"><span class="setting-key">Shop Name</span><input class="setting-val" value="Siraj CSC" id="set-shopname"></div>
+      <div class="setting-row"><span class="setting-key">Owner Name</span><input class="setting-val" value="Siraj" id="set-owner"></div>
+      <div class="setting-row"><span class="setting-key">Daily Target (₹)</span><input class="setting-val" type="number" id="set-target" value="5000" oninput="updateTarget()"></div>
+      <div class="setting-row"><span class="setting-key">Shop Open</span><input class="setting-val" type="time" id="set-open" value="09:00"></div>
+      <div class="setting-row"><span class="setting-key">Shop Close</span><input class="setting-val" type="time" id="set-close" value="19:00"></div>
+      <div style="margin-top:14px">
+        <button class="btn btn-primary" style="padding:11px 24px;width:auto;" onclick="saveSettings()">Save Settings</button>
+      </div>
+    </div>
+
+    <div class="settings-section" style="max-width:100%">
+      <div class="settings-section-title">Service Manager</div>
+
+      <!-- Add New Service Form -->
+      <div id="addSvcForm" style="background:var(--bg);border:1.5px dashed var(--border2);border-radius:var(--radius);padding:16px;margin-bottom:18px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;letter-spacing:0.5px;">+ Add New Service</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;">
+          <div>
+            <div class="modal-label" style="margin-bottom:5px;">Service Name</div>
+            <input class="modal-input" id="nsName" placeholder="e.g. Voter ID New" style="margin:0;">
+          </div>
+          <div>
+            <div class="modal-label" style="margin-bottom:5px;">Customer Price (₹)</div>
+            <input class="modal-input" id="nsPrice" type="number" placeholder="250" style="margin:0;" oninput="nsCalcProfit()">
+          </div>
+          <div>
+            <div class="modal-label" style="margin-bottom:5px;">Govt Cost (₹)</div>
+            <input class="modal-input" id="nsGovtCost" type="number" placeholder="0 if none" style="margin:0;border-color:rgba(220,38,38,0.3);" oninput="nsCalcProfit()">
+          </div>
+          <div>
+            <div class="modal-label" style="margin-bottom:5px;">Your Profit</div>
+            <div id="nsProfit" style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--success);padding:9px 0;">₹—</div>
+          </div>
+          <div>
+            <div class="modal-label" style="margin-bottom:5px;">Category</div>
+            <select class="modal-input" id="nsCat" style="margin:0;cursor:pointer;">
+              <option value="documents">Documents</option>
+              <option value="banking">Banking</option>
+              <option value="govt">Govt Schemes</option>
+              <option value="insurance">Insurance</option>
+              <option value="printing">Printing</option>
+              <option value="travel">Travel</option>
+            </select>
+          </div>
+          <div>
+            <div class="modal-label" style="margin-bottom:5px;">Icon</div>
+            <input class="modal-input" id="nsIcon" placeholder="📄" maxlength="4" style="margin:0;font-size:18px;width:60px;">
+          </div>
+          <button class="btn btn-primary" style="padding:11px 20px;white-space:nowrap;margin-top:18px;" onclick="addNewService()">+ Add</button>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--text3);">
+          Quick add: 
+          <span onclick="nsQuick('Voter ID New','200','50','documents','🗳️')" style="cursor:pointer;color:var(--saffron);margin-right:8px;">Voter ID New</span>
+          <span onclick="nsQuick('Voter ID Correction','150','50','documents','✏️')" style="cursor:pointer;color:var(--saffron);margin-right:8px;">Voter ID Correction</span>
+          <span onclick="nsQuick('Voter ID Download PVC','100','0','documents','💳')" style="cursor:pointer;color:var(--saffron);margin-right:8px;">Voter ID PVC</span>
+          <span onclick="nsQuick('PAN Card','250','97','documents','🆔')" style="cursor:pointer;color:var(--saffron);margin-right:8px;">PAN Card ₹97 cost</span>
+          <span onclick="nsQuick('Passport Apply','2000','1541','documents','🛂')" style="cursor:pointer;color:var(--saffron);margin-right:8px;">Passport ₹1541 cost</span>
+          <span onclick="nsQuick('Seva Sindhu Cert','100','0','documents','📑')" style="cursor:pointer;color:var(--saffron);margin-right:8px;">Seva Sindhu</span>
+          <span onclick="nsQuick('Tele-Law','0','0','govt','⚖️')" style="cursor:pointer;color:var(--saffron);margin-right:8px;">Tele-Law</span>
+          <span onclick="nsQuick('BBPS Bill Pay','10','0','banking','💡')" style="cursor:pointer;color:var(--saffron);">BBPS</span>
+        </div>
+      </div>
+
+      <!-- Filter + Search bar -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <input id="svcMgrSearch" class="modal-input" placeholder="🔍 Search services..." style="flex:1;min-width:180px;" oninput="renderServiceManager()">
+        <select id="svcMgrCat" class="modal-input" style="width:150px;cursor:pointer;" onchange="renderServiceManager()">
+          <option value="all">All Categories</option>
+          <option value="banking">Banking</option>
+          <option value="documents">Documents</option>
+          <option value="govt">Govt Schemes</option>
+          <option value="insurance">Insurance</option>
+          <option value="printing">Printing</option>
+          <option value="travel">Travel</option>
+        </select>
+        <span id="svcCount" style="font-size:12px;color:var(--text3);white-space:nowrap;"></span>
+      </div>
+
+      <!-- Services List -->
+      <div id="svcManagerList"></div>
+
+      <div style="margin-top:16px;display:flex;gap:10px;">
+        <button class="btn btn-primary" style="padding:11px 24px;width:auto;" onclick="saveServiceEdits()">💾 Save All Changes</button>
+        <button class="btn btn-secondary" style="padding:11px 16px;" onclick="resetServicesToDefault()">↺ Reset to Default</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">AEPS Commission Slabs</div>
+      <div id="aepsSlabsDisplay"></div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Data Management</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-secondary" style="padding:10px 16px;font-size:13px;" onclick="exportData()">⬇ Export Backup</button>
+        <button class="btn btn-danger" style="padding:10px 16px;font-size:13px;" onclick="clearAllData()">🗑 Clear All Data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end app-body -->
+
+<!-- ===== MODALS ===== -->
+
+<!-- AEPS Modal -->
+<div class="modal-overlay" id="aepsModal">
+  <div class="modal">
+    <div class="modal-title">⚡ AEPS Withdrawal</div>
+    <div class="modal-field">
+      <label class="modal-label">Withdrawal Amount (₹)</label>
+      <input class="modal-input" type="number" id="aepsAmount" placeholder="Enter amount..." oninput="calcAepsComm()">
+    </div>
+    <div class="aeps-amounts" id="aepsQuickAmounts"></div>
+    <div style="background:var(--saffron-bg);border:1.5px solid rgba(224,123,0,0.25);border-radius:9px;padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:14px;color:var(--text2);font-weight:500;">Commission Earned</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:22px;color:var(--saffron);font-weight:500" id="aepsComm">₹0</span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('aepsModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addAepsToB()">Add to Bill</button>
+    </div>
+  </div>
+</div>
+
+<!-- Expense Modal -->
+<div class="modal-overlay" id="expenseModal">
+  <div class="modal">
+    <div class="modal-title">− Add Expense</div>
+    <div class="modal-field">
+      <label class="modal-label">Category</label>
+      <div class="expense-cats">
+        <div class="exp-cat-btn" onclick="selectExpCat(this,'Cabin')">Cabin</div>
+        <div class="exp-cat-btn" onclick="selectExpCat(this,'Notes to Coin')">Coins</div>
+        <div class="exp-cat-btn" onclick="selectExpCat(this,'Internet')">Internet</div>
+        <div class="exp-cat-btn" onclick="selectExpCat(this,'Shop Rent')">Rent</div>
+        <div class="exp-cat-btn" onclick="selectExpCat(this,'Electricity')">Electricity</div>
+        <div class="exp-cat-btn" onclick="selectExpCat(this,'Other')">Other</div>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Custom Category (optional)</label>
+      <input class="modal-input" id="expCustomCat" placeholder="Or type here...">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Amount (₹)</label>
+      <input class="modal-input" type="number" id="expAmount" placeholder="0">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('expenseModal')">Cancel</button>
+      <button class="btn btn-expense" onclick="addExpense()">Add Expense</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Customer Modal -->
+<div class="modal-overlay" id="addCustModal">
+  <div class="modal">
+    <div class="modal-title">👤 Add Customer</div>
+    <div class="modal-field">
+      <label class="modal-label">Mobile Number</label>
+      <input class="modal-input" type="tel" id="newCustMobile" maxlength="10" placeholder="10-digit number">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Full Name</label>
+      <input class="modal-input" id="newCustName" placeholder="Customer name">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Address (optional)</label>
+      <input class="modal-input" id="newCustAddr" placeholder="Area / Village">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('addCustModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCustomer()">Save Customer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Service Modal -->
+<div class="modal-overlay" id="customSvcModal">
+  <div class="modal">
+    <div class="modal-title">+ Custom Service</div>
+    <div class="modal-field">
+      <label class="modal-label">Service Name</label>
+      <input class="modal-input" id="custSvcName" placeholder="e.g. Seva Sindhu Certificate">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Amount (₹)</label>
+      <input class="modal-input" type="number" id="custSvcAmount" placeholder="0">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('customSvcModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addCustomSvcToBill()">Add to Bill</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<!-- Customer Detail Modal -->
+<div class="modal-overlay" id="custDetailModal" style="align-items:flex-start;padding-top:40px;">
+  <div class="modal" style="width:560px;max-width:95vw;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="cdAvatar" style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:20px;"></div>
+        <div>
+          <div id="cdName" style="font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--text1);"></div>
+          <div id="cdMobile" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);"></div>
+        </div>
+      </div>
+      <button onclick="closeModal('custDetailModal')" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--text3);">✕</button>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;" id="cdStats"></div>
+
+    <!-- Service breakdown -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">Services Used</div>
+      <div id="cdServiceBreakdown"></div>
+    </div>
+
+    <!-- Transaction history -->
+    <div>
+      <div style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">Full Transaction History</div>
+      <div id="cdHistory" style="max-height:300px;overflow-y:auto;"></div>
+    </div>
+
+    <div style="margin-top:16px;display:flex;gap:8px;">
+      <button class="btn btn-secondary" style="flex:1;" onclick="prefillBillForCustomer()">⚡ New Bill for this Customer</button>
+      <button class="btn btn-secondary" onclick="closeModal('custDetailModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toastIcon">✓</span>
+  <span id="toastMsg">Done</span>
+</div>
+
+<script>
+// =================== SERVICES CATALOG ===================
+const _DEFAULT_SVC_SEED = [
+  {id:'aeps',     name:'AEPS Withdrawal',   price:0,   cat:'banking',   icon:'🏧', variable:true},
+  {id:'aeps_dep', name:'Cash Deposit',      price:10,  cat:'banking',   icon:'💰'},
+  {id:'bal_enq',  name:'Balance Enquiry',   price:5,   cat:'banking',   icon:'📊'},
+  {id:'mini_stmt',name:'Mini Statement',    price:5,   cat:'banking',   icon:'📄'},
+  {id:'voter_id', name:'Voter ID Card',     price:200, cat:'documents', icon:'🗳️'},
+  {id:'voter_pvc',name:'Voter PVC Card',    price:100, cat:'documents', icon:'💳'},
+  {id:'pan_new',  name:'PAN Card New',      price:120, cat:'documents', icon:'🆔'},
+  {id:'pan_corr', name:'PAN Correction',    price:120, cat:'documents', icon:'✏️'},
+  {id:'aadhaar',  name:'Aadhaar Update',    price:100, cat:'documents', icon:'🔷'},
+  {id:'adh_print',name:'Aadhaar Print',     price:20,  cat:'documents', icon:'🖨️'},
+  {id:'income',   name:'Income Certificate',price:100, cat:'documents', icon:'📑'},
+  {id:'caste',    name:'Caste Certificate', price:100, cat:'documents', icon:'📑'},
+  {id:'domicile', name:'Domicile Cert',     price:100, cat:'documents', icon:'📑'},
+  {id:'passport', name:'Passport Apply',    price:100, cat:'documents', icon:'🛂'},
+  {id:'ayushman', name:'Ayushman Card',     price:30,  cat:'govt',      icon:'🏥'},
+  {id:'eshram',   name:'E-Shram Reg',       price:50,  cat:'govt',      icon:'👷'},
+  {id:'udyam',    name:'Udyam Registration',price:200, cat:'govt',      icon:'🏭'},
+  {id:'pmkisan',  name:'PM Kisan eKYC',     price:50,  cat:'govt',      icon:'🌾'},
+  {id:'jeevan',   name:'Jeevan Praman',     price:50,  cat:'govt',      icon:'👴'},
+  {id:'health',   name:'Health Insurance',  price:0,   cat:'insurance', icon:'❤️', variable:true},
+  {id:'vehicle',  name:'Vehicle Insurance', price:0,   cat:'insurance', icon:'🚗', variable:true},
+  {id:'term',     name:'Term Insurance',    price:0,   cat:'insurance', icon:'🛡️', variable:true},
+  {id:'print',    name:'Print (per page)',  price:5,   cat:'printing',  icon:'🖨️'},
+  {id:'photo',    name:'Photocopy',         price:2,   cat:'printing',  icon:'📋'},
+  {id:'scan',     name:'Scan & PDF',        price:20,  cat:'printing',  icon:'📤'},
+  {id:'photo_pr', name:'Photo Print',       price:30,  cat:'printing',  icon:'🖼️'},
+  {id:'irctc',    name:'IRCTC Ticket',      price:50,  cat:'travel',    icon:'🚂'},
+];
+// SERVICES is loaded from storage in init(); this is the live working array
+let SERVICES = _DEFAULT_SVC_SEED.map(s=>({...s}));
+
+
+const AEPS_SLABS = [
+  {amt:500,comm:5},{amt:1000,comm:10},{amt:2000,comm:20},
+  {amt:3000,comm:30},{amt:4000,comm:40},{amt:5000,comm:50},{amt:10000,comm:100}
+];
+
+const CAT_COLORS = {banking:'#1d4ed8',documents:'#e07b00',insurance:'#15803d',printing:'#b45309',govt:'#7c3aed',travel:'#be185d'};
+
+// =================== STATE ===================
+let bill = [];
+let todayExpenses = [];
+let selectedExpCat = '';
+let currentCustMobile = '';
+let topPeriod = 'day';
+
+// =================== STORAGE ===================
+// =================== GOOGLE SHEETS BACKEND ===================
+const API_URL = 'https://script.google.com/macros/s/AKfycbwE99dL0TRSpUpSbr9-4zsrcOWxWPu0BJ9R_PKHwX8qznhQ1kRuQ_5I3lAVoSR5dRmD/exec';
+
+// LocalStorage fallback cache (offline support)
+const lsGet = (key,def) => { try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch(e) { return def; } };
+const lsSet = (key,val) => localStorage.setItem(key, JSON.stringify(val));
+
+// API call helper
+async function api(params) {
+  try {
+    const url = API_URL + '?' + new URLSearchParams(params).toString();
+    const res = await fetch(url);
+    const json = await res.json();
+    return json;
+  } catch(e) {
+    console.warn('API error:', e);
+    return { ok: false, error: e.toString() };
+  }
+}
+
+let syncTimer;
+function setSyncStatus(status) {
+  const el = document.getElementById('syncStatus');
+  if(!el) return;
+  clearTimeout(syncTimer);
+  if(status === 'saving') {
+    el.textContent = '⟳ Syncing...';
+    el.style.color = 'var(--warning)';
+    // Auto-clear if stuck for more than 8 seconds
+    syncTimer = setTimeout(() => { el.textContent = ''; }, 8000);
+  } else if(status === 'ok') {
+    el.textContent = '✓ Synced';
+    el.style.color = 'var(--success)';
+    syncTimer = setTimeout(() => { el.textContent = ''; }, 2500);
+  } else if(status === 'offline') {
+    el.textContent = '⚠ Offline — saved locally';
+    el.style.color = 'var(--danger)';
+    syncTimer = setTimeout(() => { el.textContent = ''; }, 4000);
+  }
+}
+
+const DAILY_TARGET = () => parseInt(lsGet('sc_target') || '5000');
+const todayKey = () => new Date().toISOString().split('T')[0];
+const getDateDaysAgo = n => { const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().split('T')[0]; };
+
+// Legacy aliases — kept for compat with non-critical local ops
+const gs = lsGet;
+const ss = lsSet;
+
+// =================== INIT ===================
+async function init() {
+  renderClock();
+  setInterval(renderClock, 1000);
+  document.getElementById('reportDate').value = todayKey();
+  updateBillUI();
+
+  // Show loading indicator
+  setSyncStatus('saving');
+  document.getElementById('syncStatus').textContent = '⟳ Loading data...';
+
+  // Load settings
+  try {
+    const settingsRes = await api({action:'getSettings'});
+    if(settingsRes.ok && settingsRes.data) {
+      const s = settingsRes.data;
+      if(s.sc_target) lsSet('sc_target', s.sc_target);
+      if(s.sc_shopname) lsSet('sc_shopname', s.sc_shopname);
+    }
+  } catch(e) {}
+
+  // Load services from Sheets
+  try {
+    const svcRes = await api({action:'getServices'});
+    if(svcRes.ok && svcRes.data && svcRes.data.length > 0) {
+      SERVICES.length = 0;
+      svcRes.data.forEach(s => SERVICES.push(s));
+      lsSet('sc_services', SERVICES);
+    } else {
+      const saved = lsGet('sc_services', null);
+      if(saved && Array.isArray(saved) && saved.length > 0) {
+        SERVICES.length = 0;
+        saved.forEach(s => SERVICES.push(s));
+      }
+    }
+  } catch(e) {
+    const saved = lsGet('sc_services', null);
+    if(saved && Array.isArray(saved) && saved.length > 0) {
+      SERVICES.length = 0;
+      saved.forEach(s => SERVICES.push(s));
+    }
+  }
+
+  // *** FULL SYNC FROM SHEETS — ALL DATA (no limit) ***
+  try {
+    document.getElementById('syncStatus').textContent = '⟳ Syncing all transactions...';
+
+    // Sync ALL transactions — from beginning of time
+    const txnRes = await api({action:'getTransactionRange', from: '2020-01-01', to: todayKey()});
+    if(txnRes.ok && txnRes.data && txnRes.data.length > 0) {
+      // Group by date
+      const byDate = {};
+      txnRes.data.forEach(t => {
+        const d = t.date;
+        if(!d) return;
+        if(!byDate[d]) byDate[d] = [];
+        byDate[d].push({
+          name: t.service||t.name, amount: Number(t.amount)||0,
+          qty: Number(t.qty)||1, time: String(t.time||''),
+          govtCost: Number(t.govtCost)||0, profit: Number(t.profit)||0,
+          custMobile: String(t.custMobile||''), custName: String(t.custName||''),
+          billId: String(t.billId||'')
+        });
+      });
+
+      // Save each day to local cache (merge with existing)
+      Object.entries(byDate).forEach(([date, txns]) => {
+        const existing = lsGet('sc_day_'+date, {transactions:[], expenses:[]});
+        // Deduplicate by billId
+        const existingIds = new Set((existing.transactions||[]).map(t=>t.billId).filter(Boolean));
+        const newTxns = txns.filter(t => !t.billId || !existingIds.has(t.billId));
+        existing.transactions = [...(existing.transactions||[]), ...newTxns];
+        lsSet('sc_day_'+date, existing);
+      });
+    }
+
+    // Sync expenses last 30 days
+    const expRes = await api({action:'getExpenses', date:''});
+    if(expRes.ok && expRes.data && expRes.data.length > 0) {
+      const byDate = {};
+      expRes.data.forEach(e => {
+        const d = String(e.date||'');
+        if(!d) return;
+        if(!byDate[d]) byDate[d] = [];
+        byDate[d].push({category:String(e.category||''), amount:Number(e.amount)||0, time:String(e.time||'')});
+      });
+      Object.entries(byDate).forEach(([date, exps]) => {
+        const existing = lsGet('sc_day_'+date, {transactions:[], expenses:[]});
+        existing.expenses = exps;
+        lsSet('sc_day_'+date, existing);
+      });
+    }
+
+    // Sync all customers
+    document.getElementById('syncStatus').textContent = '⟳ Syncing customers...';
+    const custRes = await api({action:'getCustomers'});
+    if(custRes.ok && custRes.data && custRes.data.length > 0) {
+      const custs = custRes.data.map(r=>({
+        mobile: String(r.mobile), name: String(r.name),
+        address: String(r.address||''),
+        firstVisit: String(r.firstVisit||''),
+        lastVisit: String(r.lastVisit||''),
+        visits: Number(r.visits)||0,
+        totalBusiness: Number(r.totalBusiness)||0
+      }));
+      lsSet('sc_customers', custs);
+    }
+
+  } catch(e) {
+    console.warn('Full sync failed, using local cache:', e);
+  }
+
+  renderServicesGrid('all');
+  renderServiceManager();
+  renderAepsQuick();
+  renderAepsSlabsDisplay();
+
+  const t = lsGet('sc_target', 5000);
+  const setTarget = document.getElementById('set-target');
+  if(setTarget) setTarget.value = t;
+
+  await loadTodayExpenses();
+  setSyncStatus('ok');
+  document.getElementById('syncStatus').textContent = '✓ All data synced';
+  setTimeout(()=>{ const el=document.getElementById('syncStatus'); if(el) el.textContent=''; }, 3000);
+}
+
+function renderClock() {
+  const now = new Date();
+  document.getElementById('clockDisplay').textContent = now.toLocaleTimeString('en-IN');
+  document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+  const h = now.getHours();
+  const gr = h<12?'Good Morning':h<17?'Good Afternoon':'Good Evening';
+  const el = document.getElementById('greetingText');
+  if(el) el.textContent = gr + ', Siraj 👋';
+  const gd = document.getElementById('greetingDate');
+  if(gd) gd.textContent = now.toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+
+// =================== SCREEN SWITCHING ===================
+function showScreen(id, btn) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(id==='dashboard') renderDashboard();
+  if(id==='customers') renderCustomers();
+  if(id==='reports') renderReport();
+  if(id==='analytics') renderAnalytics('daily');
+  if(id==='closing') initClosing();
+  if(id==='settings') renderServiceManager();
+}
+
+// =================== SERVICES GRID ===================
+let currentCat = 'all';
+let searchTerm = '';
+
+function renderServicesGrid(cat) {
+  currentCat = cat;
+  const filtered = SERVICES.filter(s =>
+    (cat==='all' || s.cat===cat) &&
+    s.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  document.getElementById('servicesGrid').innerHTML = filtered.map(s => `
+    <div class="service-btn" onclick="addService('${s.id}')" style="--svc-accent:${CAT_COLORS[s.cat]||'#e07b00'}">
+      <span class="svc-icon">${s.icon}</span>
+      <div class="svc-name">${s.name}</div>
+      ${s.variable
+        ? `<div class="svc-price variable">Tap → enter amount</div>`
+        : `<div class="svc-price">₹${s.price}</div>`
+      }
+    </div>
+  `).join('');
+}
+
+function filterCat(btn, cat) {
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderServicesGrid(cat);
+}
+
+function filterServices() {
+  searchTerm = document.getElementById('serviceSearch').value;
+  renderServicesGrid(currentCat);
+}
+
+// =================== ADD TO BILL ===================
+function addService(id) {
+  if(id === 'aeps') { openModal('aepsModal'); return; }
+  const svc = SERVICES.find(s=>s.id===id);
+  if(!svc) return;
+  if(svc.variable) {
+    document.getElementById('custSvcName').value = svc.name;
+    document.getElementById('custSvcAmount').value = '';
+    openModal('customSvcModal');
+    return;
+  }
+  // FIX: always find in existing bill array, push if new
+  const idx = bill.findIndex(b=>b.id===id);
+  if(idx >= 0) {
+    bill[idx].qty++;
+    bill[idx].amount = bill[idx].price * bill[idx].qty;
+  } else {
+    bill.push({id, name:svc.name, price:svc.price, qty:1, amount:svc.price, govtCost: svc.govtCost||0});
+  }
+  updateBillUI();
+  showToast('✓', svc.name + ' added');
+}
+
+// =================== BILL UI — FIXED ===================
+function updateBillUI() {
+  const container = document.getElementById('billItems');
+  if(bill.length === 0) {
+    container.innerHTML = `
+      <div class="bill-empty">
+        <div class="bill-empty-icon">🧾</div>
+        <div class="bill-empty-text">Tap a service to add to bill</div>
+      </div>`;
+  } else {
+    container.innerHTML = bill.map((item, i) => {
+    const itemProfit = item.amount - (item.govtCost||0)*item.qty;
+    const profitStr = (item.govtCost||0) > 0
+      ? `<div style="font-size:10px;color:var(--success);margin-top:2px;">Profit: ₹${itemProfit}</div>`
+      : '';
+    return `
+      <div class="bill-item">
+        <div class="bill-item-name">${item.name}${profitStr}</div>
+        <div class="bill-item-qty">
+          <button class="qty-btn" onclick="changeQty(${i},-1)">−</button>
+          <span class="qty-val">${item.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${i},1)">+</button>
+        </div>
+        <div class="bill-item-amount">₹${item.amount}</div>
+        <button class="remove-btn" onclick="removeItem(${i})">✕</button>
+      </div>`;
+  }).join('');
+  }
+  updateTotals();
+}
+
+function changeQty(i, d) {
+  if(i < 0 || i >= bill.length) return;
+  bill[i].qty = Math.max(1, bill[i].qty + d);
+  bill[i].amount = bill[i].price * bill[i].qty;
+  updateBillUI();
+}
+
+function removeItem(i) {
+  if(i < 0 || i >= bill.length) return;
+  bill.splice(i, 1);
+  updateBillUI();
+}
+
+function updateTotals() {
+  const subtotal = bill.reduce((s,b)=>s+b.amount, 0);
+  const billGovtCost = bill.reduce((s,b)=>s+(b.govtCost||0)*b.qty, 0);
+  const expTotal = todayExpenses.reduce((s,e)=>s+e.amount, 0);
+  const todayIncome = getTodayIncome() + subtotal;
+  const pct = Math.min(100, Math.round((todayIncome / DAILY_TARGET()) * 100));
+  document.getElementById('subtotalVal').textContent = '₹' + subtotal;
+  document.getElementById('govtCostVal').textContent = billGovtCost > 0 ? '-₹' + billGovtCost : '-₹0';
+  document.getElementById('expenseVal').textContent = '-₹' + expTotal;
+  document.getElementById('totalAmount').textContent = '₹' + subtotal;
+  document.getElementById('targetProgress').textContent = '₹' + todayIncome + ' / ₹' + DAILY_TARGET();
+  document.getElementById('targetFill').style.width = pct + '%';
+}
+
+function getTodayIncome() {
+  const cached = lsGet('sc_day_'+todayKey(), {transactions:[]});
+  return (cached.transactions||[]).reduce((s,t)=>s+(Number(t.amount)||0), 0);
+}
+
+async function loadTodayExpenses() {
+  const today = todayKey();
+  // Try Sheets first
+  try {
+    const res = await api({action:'getExpenses', date: today});
+    if(res.ok && res.data) {
+      todayExpenses = res.data.map(r => ({
+        category: r.category, amount: Number(r.amount), time: r.time
+      }));
+      // Update local cache
+      const cached = lsGet('sc_day_'+today, {transactions:[],expenses:[]});
+      cached.expenses = todayExpenses;
+      lsSet('sc_day_'+today, cached);
+      updateTotals();
+      return;
+    }
+  } catch(e) {}
+  // Fallback to local
+  const data = lsGet('sc_day_'+today, {transactions:[],expenses:[]});
+  todayExpenses = data.expenses || [];
+  updateTotals();
+}
+
+// =================== SAVE BILL ===================
+async function saveBill() {
+  if(bill.length === 0) { showToast('⚠', 'Add at least one service'); return; }
+  const time = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  const today = todayKey();
+  const billId = 'BILL_' + Date.now();
+  const custName = getCustomerName(currentCustMobile);
+
+  const transactions = bill.map(item => ({
+    date: today, time, name: item.name,
+    amount: item.amount, qty: item.qty||1,
+    govtCost: (item.govtCost||0) * (item.qty||1),
+    profit: item.amount - (item.govtCost||0)*(item.qty||1),
+    custMobile: currentCustMobile,
+    custName, billId
+  }));
+
+  // Save to local cache immediately
+  const cached = lsGet('sc_day_'+today, {transactions:[],expenses:[]});
+  transactions.forEach(t => cached.transactions.push(t));
+  lsSet('sc_day_'+today, cached);
+
+  // Save to Google Sheets
+  setSyncStatus('saving');
+  const res = await api({action:'saveTransaction', data: JSON.stringify(transactions)});
+  if(res.ok) {
+    setSyncStatus('ok');
+  } else {
+    setSyncStatus('offline');
+    showToast('⚠', 'Saved offline — will sync when online');
+  }
+
+  // Update customer history
+  if(currentCustMobile) await updateCustomerHistory(currentCustMobile, bill);
+
+  const total = bill.reduce((s,b)=>s+b.amount,0);
+  showToast('✓', 'Bill saved — ₹' + total);
+  bill = [];
+  currentCustMobile = '';
+  document.getElementById('custMobile').value = '';
+  document.getElementById('customerFound').classList.remove('show');
+  updateBillUI();
+}
+
+function clearBill() { bill = []; updateBillUI(); showToast('🗑', 'Bill cleared'); }
+
+function printBill() {
+  if(bill.length===0){ showToast('⚠','Nothing to print'); return; }
+  const total = bill.reduce((s,b)=>s+b.amount,0);
+  const win = window.open('','_blank');
+  const rows = bill.map(b=>`<tr><td>${b.name}</td><td align="center">${b.qty}</td><td align="right">₹${b.amount}</td></tr>`).join('');
+  const custName = getCustomerName(currentCustMobile);
+  win.document.write(`<!DOCTYPE html><html><head><title>Bill</title><style>
+    body{font-family:sans-serif;max-width:300px;margin:0 auto;padding:20px;font-size:13px}
+    h2{text-align:center;font-size:15px;margin-bottom:4px}
+    .sub{text-align:center;font-size:11px;color:#666;margin-bottom:12px}
+    table{width:100%;border-collapse:collapse}
+    td,th{padding:5px 3px;border-bottom:1px solid #eee}
+    .total{font-weight:bold;font-size:15px;text-align:right;padding:10px 0;border-top:2px solid #000}
+    .footer{text-align:center;font-size:11px;color:#888;margin-top:14px}
+  </style></head><body>
+  <h2>SIRAJ CSC</h2>
+  <div class="sub">Kalaburagi, Karnataka<br>${new Date().toLocaleString('en-IN')}${custName?'<br>Customer: '+custName:''}</div>
+  <table><tr><th align="left">Service</th><th>Qty</th><th align="right">Amt</th></tr>${rows}</table>
+  <div class="total">TOTAL: ₹${total}</div>
+  <div class="footer">Thank you! Visit again</div>
+  </body></html>`);
+  win.print();
+}
+
+// =================== AEPS ===================
+function renderAepsQuick() {
+  const el = document.getElementById('aepsQuickAmounts');
+  if(!el) return;
+  el.innerHTML = AEPS_SLABS.map(s=>`
+    <div class="aeps-quick" onclick="setAepsAmt(${s.amt})">
+      <div class="aeps-quick-amt">₹${s.amt.toLocaleString('en-IN')}</div>
+      <div class="aeps-quick-comm">+₹${s.comm}</div>
+    </div>`).join('');
+}
+
+function renderAepsSlabsDisplay() {
+  const el = document.getElementById('aepsSlabsDisplay');
+  if(!el) return;
+  el.innerHTML = AEPS_SLABS.map(s=>`
+    <div class="setting-row">
+      <span class="setting-key">₹${s.amt.toLocaleString('en-IN')} withdrawal</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--saffron);font-weight:500;">₹${s.comm} commission</span>
+    </div>`).join('');
+}
+
+function setAepsAmt(amt) {
+  document.getElementById('aepsAmount').value = amt;
+  calcAepsComm();
+}
+
+function calcAepsComm() {
+  const amt = parseInt(document.getElementById('aepsAmount').value) || 0;
+  let comm = 0;
+  for(let i=AEPS_SLABS.length-1; i>=0; i--) {
+    if(amt >= AEPS_SLABS[i].amt) { comm=AEPS_SLABS[i].comm; break; }
+  }
+  if(amt>0 && comm===0) comm = Math.floor(amt/1000)*10;
+  document.getElementById('aepsComm').textContent = '₹' + comm;
+}
+
+function addAepsToB() {
+  const amt = parseInt(document.getElementById('aepsAmount').value) || 0;
+  if(!amt) { showToast('⚠','Enter withdrawal amount'); return; }
+  let comm = 0;
+  for(let i=AEPS_SLABS.length-1;i>=0;i--) { if(amt>=AEPS_SLABS[i].amt){comm=AEPS_SLABS[i].comm;break;} }
+  if(comm===0) comm = Math.floor(amt/1000)*10;
+  // AEPS entries always unique (different amounts)
+  bill.push({id:'aeps_'+Date.now(), name:'AEPS ₹'+amt.toLocaleString('en-IN'), price:comm, qty:1, amount:comm});
+  closeModal('aepsModal');
+  document.getElementById('aepsAmount').value = '';
+  document.getElementById('aepsComm').textContent = '₹0';
+  updateBillUI();
+  showToast('✓', 'AEPS ₹'+amt+' → Comm ₹'+comm);
+}
+
+// =================== EXPENSE ===================
+function selectExpCat(btn, cat) {
+  document.querySelectorAll('.exp-cat-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedExpCat = cat;
+}
+
+async function addExpense() {
+  const cat = document.getElementById('expCustomCat').value.trim() || selectedExpCat;
+  const amt = parseInt(document.getElementById('expAmount').value) || 0;
+  if(!cat) { showToast('⚠','Select a category'); return; }
+  if(!amt) { showToast('⚠','Enter amount'); return; }
+  const today = todayKey();
+  const time = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  const expense = {category:cat, amount:amt, time, date:today};
+  // Local cache update immediately
+  const data = lsGet('sc_day_'+today, {transactions:[],expenses:[]});
+  data.expenses.push(expense);
+  lsSet('sc_day_'+today, data);
+  todayExpenses = data.expenses;
+  // Save to Sheets
+  setSyncStatus('saving');
+  const res = await api({action:'saveExpense', data: JSON.stringify(expense)});
+  setSyncStatus(res.ok ? 'ok' : 'offline');
+  closeModal('expenseModal');
+  selectedExpCat = '';
+  document.getElementById('expAmount').value = '';
+  document.getElementById('expCustomCat').value = '';
+  document.querySelectorAll('.exp-cat-btn').forEach(b=>b.classList.remove('selected'));
+  updateTotals();
+  showToast('−', cat + ' ₹' + amt + ' recorded');
+}
+
+// =================== CUSTOMER ===================
+async function lookupCustomer() {
+  const mob = document.getElementById('custMobile').value;
+  currentCustMobile = mob;
+  if(mob.length === 10) {
+    // Check local cache first for speed
+    let custs = lsGet('sc_customers',[]);
+    let found = custs.find(c=>c.mobile===mob);
+    if(!found) {
+      // Try Sheets
+      const res = await api({action:'getCustomers'});
+      if(res.ok && res.data) {
+        custs = res.data.map(r=>({
+          mobile:String(r.mobile), name:r.name, address:r.address||'',
+          firstVisit:r.firstVisit, lastVisit:r.lastVisit,
+          visits:Number(r.visits)||0, totalBusiness:Number(r.totalBusiness)||0
+        }));
+        lsSet('sc_customers', custs);
+        found = custs.find(c=>c.mobile===mob);
+      }
+    }
+    if(found) {
+      document.getElementById('foundName').textContent = found.name;
+      document.getElementById('foundMeta').textContent =
+        'Visits: '+(found.visits||0)+'  |  Total: ₹'+(found.totalBusiness||0)+'  |  Since: '+(found.firstVisit||'—');
+      document.getElementById('customerFound').classList.add('show');
+    } else {
+      document.getElementById('customerFound').classList.remove('show');
+    }
+  } else {
+    document.getElementById('customerFound').classList.remove('show');
+  }
+}
+
+function getCustomerName(mob) {
+  if(!mob) return '';
+  return (lsGet('sc_customers',[]).find(c=>c.mobile===mob)||{}).name || '';
+}
+
+async function updateCustomerHistory(mob, items) {
+  const custs = lsGet('sc_customers',[]);
+  const idx = custs.findIndex(c=>c.mobile===mob);
+  const total = items.reduce((s,b)=>s+b.amount,0);
+  const today = todayKey();
+  if(idx >= 0) {
+    custs[idx].visits = (custs[idx].visits||0)+1;
+    custs[idx].totalBusiness = (custs[idx].totalBusiness||0)+total;
+    custs[idx].lastVisit = today;
+    lsSet('sc_customers', custs);
+    // Save to Sheets
+    await api({action:'saveCustomer', data: JSON.stringify(custs[idx])});
+    // Save history rows
+    const histRows = items.map(item=>({mobile:mob, date:today, service:item.name, amount:item.amount}));
+    await api({action:'saveHistory', data: JSON.stringify(histRows)});
+  }
+}
+
+async function saveCustomer() {
+  const mob = document.getElementById('newCustMobile').value.trim();
+  const name = document.getElementById('newCustName').value.trim();
+  const addr = document.getElementById('newCustAddr').value.trim();
+  if(mob.length!==10){ showToast('⚠','Enter valid 10-digit mobile'); return; }
+  if(!name){ showToast('⚠','Enter customer name'); return; }
+  const custs = lsGet('sc_customers',[]);
+  if(custs.find(c=>c.mobile===mob)){ showToast('⚠','Customer already exists'); return; }
+  const newCust = {mobile:mob, name, address:addr, firstVisit:todayKey(), lastVisit:todayKey(), visits:0, totalBusiness:0};
+  custs.push(newCust);
+  lsSet('sc_customers', custs);
+  // Save to Sheets
+  setSyncStatus('saving');
+  const res = await api({action:'saveCustomer', data: JSON.stringify(newCust)});
+  setSyncStatus(res.ok ? 'ok' : 'offline');
+  closeModal('addCustModal');
+  document.getElementById('newCustMobile').value='';
+  document.getElementById('newCustName').value='';
+  document.getElementById('newCustAddr').value='';
+  showToast('✓', name+' registered');
+  if(document.getElementById('screen-customers').classList.contains('active')) renderCustomers();
+}
+
+function openAddCustomer() {
+  const mob = document.getElementById('custMobile')?.value || '';
+  if(mob) document.getElementById('newCustMobile').value = mob;
+  openModal('addCustModal');
+}
+
+async function renderCustomers() {
+  // Load from Sheets, update local cache
+  try {
+    const res = await api({action:'getCustomers'});
+    if(res.ok && res.data && res.data.length > 0) {
+      const custs = res.data.map(r=>({
+        mobile:String(r.mobile), name:r.name, address:r.address||'',
+        firstVisit:r.firstVisit, lastVisit:r.lastVisit,
+        visits:Number(r.visits)||0, totalBusiness:Number(r.totalBusiness)||0
+      }));
+      lsSet('sc_customers', custs);
+    }
+  } catch(e) {}
+  const custs = lsGet('sc_customers',[]);
+  const q = (document.getElementById('custSearch')?.value||'').toLowerCase();
+  const filtered = custs.filter(c=>c.name.toLowerCase().includes(q)||c.mobile.includes(q))
+    .sort((a,b)=>(b.totalBusiness||0)-(a.totalBusiness||0));
+
+  const statsEl = document.getElementById('custStatsRow');
+  if(statsEl) {
+    const total = custs.length;
+    const totalBiz = custs.reduce((s,c)=>s+(c.totalBusiness||0),0);
+    const active = custs.filter(c=>c.lastVisit && c.lastVisit>=getDateDaysAgo(30)).length;
+    statsEl.innerHTML = [
+      {l:'Total Customers',v:total,c:'var(--saffron)'},
+      {l:'Active (30 days)',v:active,c:'var(--success)'},
+      {l:'Total Business',v:'₹'+totalBiz,c:'var(--blue)'}
+    ].map(s=>`<div class="kpi-card" style="--accent-color:${s.c}"><div class="kpi-label">${s.l}</div><div class="kpi-value">${s.v}</div></div>`).join('');
+  }
+
+  const colors = [['#fff7ed','#e07b00'],['#eff6ff','#1d4ed8'],['#f0fdf4','#15803d'],['#fffbeb','#b45309'],['#faf5ff','#7c3aed']];
+  const grid = document.getElementById('customerGrid');
+  if(!filtered.length) {
+    grid.innerHTML = '<div style="color:var(--text3);font-size:14px;grid-column:1/-1;padding:40px;text-align:center;">No customers found. Add your first customer!</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map((c,i)=>{
+    const [bg,fg] = colors[i%colors.length];
+    const initials = c.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const daysSince = c.lastVisit ? Math.floor((new Date()-new Date(c.lastVisit))/86400000) : null;
+    const lastStr = daysSince===null?'No visits':daysSince===0?'Today':daysSince===1?'Yesterday':daysSince+' days ago';
+    return `
+    <div class="customer-card" onclick="openCustomerDetail('${c.mobile}')">
+      <div class="cust-card-top">
+        <div class="cust-avatar" style="background:${bg};color:${fg}">${initials}</div>
+        <div class="cust-info">
+          <div class="cust-name">${c.name}</div>
+          <div class="cust-mobile">${c.mobile}</div>
+        </div>
+        <div style="margin-left:auto;font-size:11px;color:var(--saffron);font-weight:600;white-space:nowrap;">View History →</div>
+      </div>
+      <div class="cust-stats">
+        <div><div class="cust-stat-label">Visits</div><div class="cust-stat-val">${c.visits||0}</div></div>
+        <div><div class="cust-stat-label">Spent</div><div class="cust-stat-val money">₹${c.totalBusiness||0}</div></div>
+        <div><div class="cust-stat-label">Avg/Visit</div><div class="cust-stat-val">₹${c.visits?Math.round((c.totalBusiness||0)/c.visits):0}</div></div>
+      </div>
+      <div class="cust-last-visit">Last visit: <span>${lastStr}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// =================== DASHBOARD ===================
+function getDayData(dateKey) { return lsGet('sc_day_'+dateKey, {transactions:[],expenses:[]}); }
+
+async function syncDayFromSheets(dateKey) {
+  // Always start with local cache
+  const local = lsGet('sc_day_'+dateKey, {transactions:[],expenses:[]});
+  try {
+    const res = await api({action:'getDailySummary', date: dateKey});
+    if(res.ok) {
+      const sheetsTxns = (res.transactions||[]).map(r=>({
+        name:r.service||r.name, amount:Number(r.amount)||0,
+        qty:Number(r.qty)||1, time:String(r.time||''),
+        govtCost:Number(r.govtCost)||0, profit:Number(r.profit)||0,
+        custMobile:String(r.custMobile||''), custName:String(r.custName||''),
+        billId:String(r.billId||'')
+      }));
+      const sheetsExps = (res.expenses||[]).map(r=>({
+        category:String(r.category||''), amount:Number(r.amount)||0,
+        time:String(r.time||'')
+      }));
+
+      // Merge: Sheets data takes priority, but keep local items not in Sheets yet
+      // Deduplicate by billId for transactions
+      const sheetsIds = new Set(sheetsTxns.map(t=>t.billId).filter(Boolean));
+      const localOnly = (local.transactions||[]).filter(t => t.billId && !sheetsIds.has(t.billId));
+      const merged = {
+        transactions: [...sheetsTxns, ...localOnly],
+        expenses: sheetsExps.length > 0 ? sheetsExps : (local.expenses||[])
+      };
+      lsSet('sc_day_'+dateKey, merged);
+      return merged;
+    }
+  } catch(e) {}
+  // Sheets failed — return local as-is
+  return local;
+}
+function getDayRevenue(dateKey) { return (getDayData(dateKey).transactions||[]).reduce((s,t)=>s+t.amount,0); }
+function getDayTxns(dateKey) { return (getDayData(dateKey).transactions||[]).length; }
+
+async function renderDashboard() {
+  const today = todayKey();
+  const yesterday = getDateDaysAgo(1);
+
+  // Sync today from Sheets (merge with local)
+  setSyncStatus('saving');
+  await syncDayFromSheets(today);
+  setSyncStatus('ok');
+
+  // Background sync yesterday too (non-blocking)
+  syncDayFromSheets(yesterday).catch(()=>{});
+  const todayRev = getDayRevenue(today);
+  const yestRev = getDayRevenue(yesterday);
+  const todayTxns = getDayTxns(today);
+  const todayExp = (getDayData(today).expenses||[]).reduce((s,e)=>s+e.amount,0);
+  const todayGovtCost = (getDayData(today).transactions||[]).reduce((s,t)=>s+(t.govtCost||0),0);
+  const todayProfit = todayRev - todayExp - todayGovtCost;
+  const margin = todayRev > 0 ? Math.round((todayProfit/todayRev)*100) : 0;
+  let weekRev=0, weekTxns=0, monthRev=0, monthTxns=0;
+  for(let i=0;i<7;i++) { weekRev+=getDayRevenue(getDateDaysAgo(i)); weekTxns+=getDayTxns(getDateDaysAgo(i)); }
+  for(let i=0;i<30;i++) { monthRev+=getDayRevenue(getDateDaysAgo(i)); monthTxns+=getDayTxns(getDateDaysAgo(i)); }
+  const dayChange = yestRev>0 ? Math.round(((todayRev-yestRev)/yestRev)*100) : 0;
+
+  document.getElementById('kpiToday').textContent = '₹'+todayRev;
+  document.getElementById('kpiTodayTxns').textContent = todayTxns+' transactions';
+  const chEl = document.getElementById('kpiTodayChange');
+  chEl.textContent = (dayChange>=0?'▲ +':'▼ ')+dayChange+'% vs yesterday';
+  chEl.className = 'kpi-change '+(dayChange>=0?'up':'down');
+  document.getElementById('kpiWeek').textContent = '₹'+weekRev;
+  document.getElementById('kpiWeekTxns').textContent = weekTxns+' transactions';
+  document.getElementById('kpiMonth').textContent = '₹'+monthRev;
+  document.getElementById('kpiMonthTxns').textContent = monthTxns+' transactions';
+  document.getElementById('kpiProfit').textContent = '₹'+todayProfit;
+  document.getElementById('kpiMargin').textContent = margin+'% real margin';
+  document.getElementById('kpiExpenseSub').textContent = 'Govt: ₹'+todayGovtCost+' | Shop: ₹'+todayExp;
+
+  renderWeekBarChart();
+  renderTopServices('day');
+  renderInsights(todayRev, todayTxns, weekRev);
+  renderTopCustomersToday();
+  renderHeatmap();
+}
+
+function renderWeekBarChart() {
+  const today = todayKey();
+  const days = [];
+  for(let i=6;i>=0;i--) {
+    const d = getDateDaysAgo(i);
+    days.push({date:d, rev:getDayRevenue(d), label:new Date(d+'T12:00:00').toLocaleDateString('en-IN',{weekday:'short'})});
+  }
+  const max = Math.max(...days.map(d=>d.rev), 1);
+  document.getElementById('weekBarChart').innerHTML = days.map(d=>`
+    <div class="bar-wrap">
+      <div class="bar ${d.date===today?'today-bar':''}" style="height:${Math.max(4,Math.round((d.rev/max)*100))}px">
+        ${d.rev>0?`<span class="bar-val">₹${d.rev}</span>`:''}
+      </div>
+      <div class="bar-label">${d.label}</div>
+    </div>`).join('');
+}
+
+let topPd = 'day';
+function switchTopPeriod(btn, period) {
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  topPd = period;
+  renderTopServices(period);
+}
+
+function getDaysForPeriod(period) {
+  const n = period==='day'?1:period==='week'?7:30;
+  return Array.from({length:n},(_,i)=>getDateDaysAgo(i));
+}
+
+function getServiceCounts(days) {
+  const counts = {};
+  days.forEach(dateKey => {
+    (getDayData(dateKey).transactions||[]).forEach(t => {
+      const name = t.name.startsWith('AEPS')?'AEPS':t.name;
+      counts[name] = counts[name]||{count:0,revenue:0};
+      counts[name].count += (t.qty||1);
+      counts[name].revenue += t.amount;
+    });
+  });
+  return Object.entries(counts).sort((a,b)=>b[1].revenue-a[1].revenue).slice(0,5);
+}
+
+function renderTopServices(period) {
+  const svcs = getServiceCounts(getDaysForPeriod(period));
+  const maxRev = svcs.length ? svcs[0][1].revenue : 1;
+  const rankCls = ['rank-1','rank-2','rank-3','rank-other','rank-other'];
+  const table = document.getElementById('topServicesTable');
+  if(!table) return;
+  if(!svcs.length) {
+    table.innerHTML='<tr><td colspan="3" style="color:var(--text3);font-size:13px;padding:20px 0;">No transactions yet</td></tr>';
+    return;
+  }
+  table.innerHTML = `
+    <thead><tr><th>Service</th><th class="td-count">Txns</th><th style="text-align:right">Revenue</th></tr></thead>
+    <tbody>${svcs.map(([name,data],i)=>`
+      <tr>
+        <td><span class="rank-badge ${rankCls[i]}">${i+1}</span>${name}
+          <div class="svc-bar-mini"><div class="svc-bar-fill" style="width:${Math.round((data.revenue/maxRev)*100)}%"></div></div>
+        </td>
+        <td class="td-count">${data.count}</td>
+        <td class="td-right">₹${data.revenue}</td>
+      </tr>`).join('')}
+    </tbody>`;
+}
+
+function renderInsights(todayRev, todayTxns, weekRev) {
+  const target = DAILY_TARGET();
+  const gap = target - todayRev;
+  const custs = lsGet('sc_customers',[]);
+  const dormant = custs.filter(c=>c.lastVisit && c.lastVisit<getDateDaysAgo(30)).length;
+  const insights = [];
+
+  if(gap>0) insights.push({dot:'danger',text:`<strong>Target gap: ₹${gap}</strong> remaining today to hit ₹${target}`});
+  else insights.push({dot:'good',text:`<strong>Target achieved!</strong> ₹${todayRev} collected today`});
+
+  insights.push({dot:'info',text:`<strong>${todayTxns} transactions</strong> today | Avg bill: ₹${todayTxns?Math.round(todayRev/todayTxns):0}`});
+
+  if(dormant>0) insights.push({dot:'warn',text:`<strong>${dormant} customers</strong> haven't visited in 30+ days — send WhatsApp`});
+
+  insights.push({dot:'info',text:`<strong>7-day total: ₹${weekRev}</strong>`});
+
+  document.getElementById('insightsList').innerHTML = insights.map(ins=>`
+    <div class="insight-item">
+      <div class="insight-dot ${ins.dot}"></div>
+      <div class="insight-text">${ins.text}</div>
+    </div>`).join('');
+}
+
+function renderTopCustomersToday() {
+  const data = getDayData(todayKey());
+  const custMap = {};
+  (data.transactions||[]).forEach(t=>{
+    const key = t.custMobile||'walk-in';
+    const name = t.custName||'Walk-in';
+    custMap[key] = custMap[key]||{name,amount:0,txns:0};
+    custMap[key].amount += t.amount;
+    custMap[key].txns++;
+  });
+  const sorted = Object.values(custMap).sort((a,b)=>b.amount-a.amount).slice(0,5);
+  const el = document.getElementById('topCustomersToday');
+  if(!sorted.length) {
+    el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px 0;text-align:center;">No customers yet today</div>';
+    return;
+  }
+  const rankCls = ['rank-1','rank-2','rank-3','rank-other','rank-other'];
+  el.innerHTML = sorted.map((c,i)=>`
+    <div class="insight-item">
+      <div class="rank-badge ${rankCls[i]}">${i+1}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;color:var(--text1);font-weight:500">${c.name}</div>
+        <div style="font-size:11px;color:var(--text3)">${c.txns} transaction${c.txns>1?'s':''}</div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--saffron);font-weight:500">₹${c.amount}</div>
+    </div>`).join('');
+}
+
+function renderHeatmap() {
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const hours = ['9–11am','11–1pm','1–3pm','3–5pm','5–7pm'];
+  const cells = {};
+  for(let i=6;i>=0;i--) {
+    const d = getDateDaysAgo(i);
+    (getDayData(d).transactions||[]).forEach(t=>{
+      const h = parseInt((t.time||'09:00').split(':')[0]);
+      const slot = h<11?0:h<13?1:h<15?2:h<17?3:4;
+      const dow = (new Date(d+'T12:00:00').getDay()+6)%7;
+      const key = slot+'_'+dow;
+      cells[key] = (cells[key]||0)+1;
+    });
+  }
+  const maxVal = Math.max(...Object.values(cells), 1);
+  let html = '<div class="hm-header"></div>';
+  days.forEach(d=>html+=`<div class="hm-header">${d}</div>`);
+  hours.forEach((h,slot)=>{
+    html+=`<div class="hm-label">${h}</div>`;
+    days.forEach((_,dow)=>{
+      const val = cells[slot+'_'+dow]||0;
+      const alpha = val ? Math.min(1, 0.1 + (val/maxVal)*0.85) : 0.04;
+      const textColor = alpha > 0.5 ? '#7c2d00' : 'var(--text3)';
+      html+=`<div class="hm-cell" style="background:rgba(224,123,0,${alpha.toFixed(2)});color:${textColor}" title="${val} txns">${val||''}</div>`;
+    });
+  });
+  document.getElementById('heatmapGrid').innerHTML = html;
+}
+
+// =================== ANALYTICS ===================
+function switchAnalytics(btn, period) {
+  document.querySelectorAll('.analytics-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.analytics-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('analytics-'+period).classList.add('active');
+  renderAnalytics(period);
+}
+
+function renderAnalytics(period) {
+  const days = getDaysForPeriod(period);
+  let totalRev=0, totalExp=0, txns=0;
+  days.forEach(d=>{
+    const data = getDayData(d);
+    totalRev += (data.transactions||[]).reduce((s,t)=>s+t.amount,0);
+    totalExp += (data.expenses||[]).reduce((s,e)=>s+e.amount,0);
+    txns += (data.transactions||[]).length;
+  });
+  const profit = totalRev - totalExp;
+  const avg = txns ? Math.round(totalRev/txns) : 0;
+
+  if(period==='daily') {
+    document.getElementById('an-gross').textContent='₹'+totalRev;
+    document.getElementById('an-expense').textContent='₹'+totalExp;
+    document.getElementById('an-profit').textContent='₹'+profit;
+    document.getElementById('an-avg').textContent='₹'+avg;
+    renderTopTable('an-top-daily', days);
+    renderTopCustList('an-top-cust-daily', days);
+  } else if(period==='weekly') {
+    document.getElementById('an-week-rev').textContent='₹'+totalRev;
+    document.getElementById('an-week-txns').textContent=txns;
+    document.getElementById('an-week-avg').textContent='₹'+Math.round(totalRev/7);
+    let bestDay={label:'—',rev:0};
+    for(let i=0;i<7;i++){const d=getDateDaysAgo(i);const r=getDayRevenue(d);if(r>bestDay.rev)bestDay={label:new Date(d+'T12:00:00').toLocaleDateString('en-IN',{weekday:'short'}),rev:r};}
+    document.getElementById('an-week-best').textContent=bestDay.rev>0?bestDay.label:'—';
+    renderTopTable('an-top-weekly', days);
+    renderTopCustList('an-top-cust-weekly', days);
+  } else {
+    document.getElementById('an-month-rev').textContent='₹'+totalRev;
+    document.getElementById('an-month-txns').textContent=txns;
+    document.getElementById('an-month-avg').textContent='₹'+Math.round(totalRev/30);
+    document.getElementById('an-month-best').textContent='Wk 1–4';
+    renderTopTable('an-top-monthly', days);
+    renderTopCustList('an-top-cust-monthly', days);
+  }
+}
+
+function renderTopTable(id, days) {
+  const svcs = getServiceCounts(days);
+  const el = document.getElementById(id);
+  if(!el) return;
+  const maxRev = svcs.length ? svcs[0][1].revenue : 1;
+  const rankCls = ['rank-1','rank-2','rank-3','rank-other','rank-other'];
+  if(!svcs.length){el.innerHTML='<tr><td style="color:var(--text3);font-size:13px;padding:20px 0">No data yet</td></tr>';return;}
+  el.innerHTML=`
+    <thead><tr><th>Service</th><th class="td-count">Txns</th><th style="text-align:right">Revenue</th></tr></thead>
+    <tbody>${svcs.map(([name,data],i)=>`
+      <tr>
+        <td><span class="rank-badge ${rankCls[i]}">${i+1}</span>${name}
+          <div class="svc-bar-mini"><div class="svc-bar-fill" style="width:${Math.round((data.revenue/maxRev)*100)}%"></div></div>
+        </td>
+        <td class="td-count">${data.count}</td>
+        <td class="td-right">₹${data.revenue}</td>
+      </tr>`).join('')}
+    </tbody>`;
+}
+
+function renderTopCustList(id, days) {
+  const custMap = {};
+  days.forEach(dateKey=>{
+    (getDayData(dateKey).transactions||[]).forEach(t=>{
+      const key = t.custMobile||'walk-in';
+      const name = t.custName||'Walk-in';
+      custMap[key]=custMap[key]||{name,amount:0,txns:0};
+      custMap[key].amount+=t.amount; custMap[key].txns++;
+    });
+  });
+  const sorted = Object.values(custMap).sort((a,b)=>b.amount-a.amount).slice(0,5);
+  const el = document.getElementById(id);
+  if(!el) return;
+  const rankCls=['rank-1','rank-2','rank-3','rank-other','rank-other'];
+  if(!sorted.length){el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px 0;text-align:center;">No customer data yet</div>';return;}
+  el.innerHTML=sorted.map((c,i)=>`
+    <div class="insight-item">
+      <div class="rank-badge ${rankCls[i]}">${i+1}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;color:var(--text1);font-weight:500">${c.name}</div>
+        <div style="font-size:11px;color:var(--text3)">${c.txns} transaction${c.txns>1?'s':''}</div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--saffron);font-weight:500">₹${c.amount}</div>
+    </div>`).join('');
+}
+
+// =================== REPORTS ===================
+async function renderReport() {
+  const date = document.getElementById('reportDate').value || todayKey();
+  setSyncStatus('saving');
+  const data = await syncDayFromSheets(date);
+  setSyncStatus('ok');
+  const income = (data.transactions||[]).reduce((s,t)=>s+t.amount,0);
+  const totalGovtCost = (data.transactions||[]).reduce((s,t)=>s+(t.govtCost||0),0);
+  const expense = (data.expenses||[]).reduce((s,e)=>s+e.amount,0);
+  const realProfit = income - totalGovtCost - expense;
+  document.getElementById('reportSummary').innerHTML=`
+    <div class="summary-card"><div class="summary-label">Total Charged</div><div class="summary-value income">₹${income}</div></div>
+    <div class="summary-card"><div class="summary-label">Govt Cost</div><div class="summary-value expense">₹${totalGovtCost}</div></div>
+    <div class="summary-card"><div class="summary-label">Shop Expense</div><div class="summary-value expense">₹${expense}</div></div>
+    <div class="summary-card" style="border:1.5px solid rgba(21,128,61,0.3)"><div class="summary-label">Real Profit</div><div class="summary-value profit">₹${realProfit}</div></div>`;
+
+  const allRows = [
+    ...(data.transactions||[]).map(t=>({...t,type:'income',name:t.name+(t.qty>1?` ×${t.qty}`:'')})),
+    ...(data.expenses||[]).map(e=>({name:e.category,amount:e.amount,time:e.time,type:'expense'}))
+  ].sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+
+  const table = document.getElementById('daybookTable');
+  if(!allRows.length){
+    table.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:40px;font-size:14px;">No transactions on this date</td></tr>';
+    return;
+  }
+  table.innerHTML=`
+    <thead><tr><th>Time</th><th>Description</th><th>Type</th><th style="text-align:right">Charged</th><th style="text-align:right">Govt Cost</th><th style="text-align:right">Profit</th></tr></thead>
+    <tbody>${allRows.map(r=>`
+      <tr>
+        <td class="td-time">${r.time||'—'}</td>
+        <td style="font-size:14px;">${r.name}</td>
+        <td><span style="font-size:11px;padding:3px 10px;border-radius:5px;background:${r.type==='income'?'var(--success-bg)':'var(--red-bg)'};color:${r.type==='income'?'var(--success)':'var(--danger)'};">${r.type==='income'?'Income':'Expense'}</span></td>
+        <td class="${r.type==='income'?'td-amount-pos':'td-amount-neg'}">${r.type==='income'?'+':'-'}₹${r.amount}</td>
+        <td style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--danger);">${r.type==='income'&&r.govtCost?'-₹'+r.govtCost:'—'}</td>
+        <td style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--success);">${r.type==='income'?'₹'+(r.profit!=null?r.profit:r.amount):'—'}</td>
+      </tr>`).join('')}
+    </tbody>`;
+}
+
+function renderServiceManager() {
+  const el = document.getElementById('svcManagerList');
+  if(!el) return;
+  const q = (document.getElementById('svcMgrSearch')?.value||'').toLowerCase();
+  const cat = document.getElementById('svcMgrCat')?.value || 'all';
+  const filtered = SERVICES.filter(s =>
+    (cat==='all'||s.cat===cat) &&
+    s.name.toLowerCase().includes(q)
+  );
+  document.getElementById('svcCount').textContent = filtered.length + ' of ' + SERVICES.length + ' services';
+
+  // Header row
+  const header = `<div style="display:grid;grid-template-columns:38px minmax(180px,3fr) 90px 120px 100px 100px 80px 72px;gap:10px;padding:6px 14px;margin-bottom:6px;align-items:center;">
+    <div></div>
+    <div style="font-size:12px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;font-weight:700;">Service Name</div>
+    <div style="font-size:12px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;font-weight:700;">Category</div>
+    <div style="font-size:12px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;font-weight:700;">Change Cat</div>
+    <div style="font-size:12px;color:var(--saffron);letter-spacing:1px;text-transform:uppercase;font-weight:700;text-align:right;">Customer ₹</div>
+    <div style="font-size:12px;color:var(--danger);letter-spacing:1px;text-transform:uppercase;font-weight:700;text-align:right;">Govt Cost ₹</div>
+    <div style="font-size:12px;color:var(--success);letter-spacing:1px;text-transform:uppercase;font-weight:700;text-align:right;">Profit</div>
+    <div></div>
+  </div>`;
+
+  if(!filtered.length) {
+    el.innerHTML = header + '<div style="text-align:center;padding:30px;color:var(--text3);font-size:13px;">No services match your search</div>';
+    return;
+  }
+
+  el.innerHTML = header + filtered.map((s) => {
+    const realIdx = SERVICES.indexOf(s);
+    const govtCost = s.govtCost || 0;
+    const profit = s.variable ? null : (s.price - govtCost);
+    const profitHtml = s.variable
+      ? `<span class="profit-badge variable">Variable</span>`
+      : profit > 0
+        ? `<span class="profit-badge positive">+₹${profit}</span>`
+        : `<span class="profit-badge zero">₹0</span>`;
+
+    return `
+    <div class="svc-mgr-row" id="svcrow-${realIdx}">
+      <div class="svc-mgr-icon">
+        <input style="width:32px;font-size:18px;border:none;background:none;outline:none;text-align:center;cursor:pointer;"
+          value="${s.icon}" maxlength="4"
+          onchange="SERVICES[${realIdx}].icon=this.value;renderServicesGrid(currentCat);"
+          title="Click to change icon">
+      </div>
+      <div style="min-width:0;">
+        <input class="svc-mgr-input svc-name-input" data-idx="${realIdx}"
+          title="Click to edit service name"
+          placeholder="Service name...">
+      </div>
+      <div><span class="svc-mgr-cat cat-pill-${s.cat}">${s.cat}</span></div>
+      <div>
+        <select style="font-size:13px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text2);outline:none;cursor:pointer;width:100%"
+          onchange="SERVICES[${realIdx}].cat=this.value;renderServicesGrid(currentCat);renderServiceManager();">
+          ${['banking','documents','govt','insurance','printing','travel'].map(c=>
+            `<option value="${c}" ${s.cat===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        ${s.variable
+          ? `<button class="svc-var-toggle active" onclick="toggleVariable(${realIdx})" title="Set fixed price">Variable</button>`
+          : `<input class="svc-mgr-price" type="number" value="${s.price}" min="0"
+              oninput="SERVICES[${realIdx}].price=parseInt(this.value)||0;renderServicesGrid(currentCat);updateProfitBadge(${realIdx});"
+              title="Customer se loge (₹)">`
+        }
+      </div>
+      <div>
+        ${s.variable
+          ? `<span style="font-size:11px;color:var(--text4);padding:4px 8px;">—</span>`
+          : `<input class="svc-mgr-cost" type="number" value="${govtCost}" min="0"
+              oninput="SERVICES[${realIdx}].govtCost=parseInt(this.value)||0;updateProfitBadge(${realIdx});"
+              title="Govt/portal fee jo aapke pass se kategi (₹)" placeholder="0">`
+        }
+      </div>
+      <div id="profitbadge-${realIdx}">${profitHtml}</div>
+      <div class="svc-mgr-actions">
+        <button class="svc-action-btn" onclick="toggleVariable(${realIdx})" title="${s.variable?'Set fixed price':'Make variable'}" style="font-size:10px;width:auto;padding:0 6px;color:var(--info);">
+          ${s.variable?'Fix':'Var'}
+        </button>
+        <button class="svc-action-btn" onclick="deleteService(${realIdx})" title="Delete service">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Safely set service names via JS (avoids HTML quote-breaking bug)
+  el.querySelectorAll('.svc-name-input').forEach(input => {
+    const idx = parseInt(input.dataset.idx);
+    if(!isNaN(idx) && SERVICES[idx]) {
+      input.value = SERVICES[idx].name;
+      input.addEventListener('input', () => {
+        SERVICES[idx].name = input.value;
+        renderServicesGrid(currentCat);
+      });
+    }
+  });
+}
+
+function toggleVariable(i) {
+  SERVICES[i].variable = !SERVICES[i].variable;
+  if(SERVICES[i].variable) SERVICES[i].price = 0;
+  renderServicesGrid(currentCat);
+  renderServiceManager();
+}
+
+function deleteService(i) {
+  const name = SERVICES[i].name;
+  if(!confirm(`"${name}" delete karein? Yeh permanent hoga.`)) return;
+  SERVICES.splice(i, 1);
+  lsSet('sc_services', SERVICES);
+  renderServicesGrid(currentCat);
+  renderServiceManager();
+  showToast('🗑', name + ' deleted');
+}
+
+function nsCalcProfit() {
+  const price = parseInt(document.getElementById('nsPrice')?.value) || 0;
+  const cost = parseInt(document.getElementById('nsGovtCost')?.value) || 0;
+  const el = document.getElementById('nsProfit');
+  if(!el) return;
+  if(!price) { el.textContent = '₹—'; el.style.color = 'var(--text3)'; return; }
+  const profit = price - cost;
+  el.textContent = '₹' + profit;
+  el.style.color = profit > 0 ? 'var(--success)' : profit < 0 ? 'var(--danger)' : 'var(--text3)';
+}
+
+function updateProfitBadge(i) {
+  const s = SERVICES[i];
+  if(!s) return;
+  const el = document.getElementById('profitbadge-'+i);
+  if(!el) return;
+  const govtCost = s.govtCost || 0;
+  const profit = s.price - govtCost;
+  if(s.variable) { el.innerHTML = `<span class="profit-badge variable">Variable</span>`; return; }
+  el.innerHTML = profit > 0
+    ? `<span class="profit-badge positive">+₹${profit}</span>`
+    : `<span class="profit-badge zero">₹0</span>`;
+}
+
+function addNewService() {
+  const name = document.getElementById('nsName').value.trim();
+  const price = parseInt(document.getElementById('nsPrice').value) || 0;
+  const govtCost = parseInt(document.getElementById('nsGovtCost').value) || 0;
+  const cat = document.getElementById('nsCat').value;
+  const icon = document.getElementById('nsIcon').value.trim() || '📄';
+  if(!name) { showToast('⚠', 'Service name daalo'); return; }
+  const id = 'cust_' + Date.now();
+  const profit = price - govtCost;
+  SERVICES.push({id, name, price, govtCost, cat, icon, variable: price===0});
+  lsSet('sc_services', SERVICES);
+  document.getElementById('nsName').value = '';
+  document.getElementById('nsPrice').value = '';
+  document.getElementById('nsGovtCost').value = '';
+  document.getElementById('nsIcon').value = '';
+  document.getElementById('nsProfit').textContent = '₹—';
+  renderServicesGrid(currentCat);
+  renderServiceManager();
+  showToast('✓', `"${name}" added — Profit: ₹${profit}`);
+}
+
+function nsQuick(name, price, govtCost, cat, icon) {
+  document.getElementById('nsName').value = name;
+  document.getElementById('nsPrice').value = price;
+  document.getElementById('nsGovtCost').value = govtCost;
+  document.getElementById('nsCat').value = cat;
+  document.getElementById('nsIcon').value = icon;
+  nsCalcProfit();
+  document.getElementById('nsName').focus();
+}
+
+async function saveServiceEdits() {
+  lsSet('sc_services', SERVICES);
+  renderServicesGrid(currentCat);
+  setSyncStatus('saving');
+  const res = await api({action:'saveServices', data: JSON.stringify(SERVICES)});
+  setSyncStatus(res.ok ? 'ok' : 'offline');
+  showToast('✓', 'Services saved — ' + SERVICES.length + ' total');
+}
+
+function resetServicesToDefault() {
+  if(!confirm('Saari custom services delete hokar default list wapas aayegi. Sure?')) return;
+  SERVICES.length = 0;
+  _DEFAULT_SVC_SEED.forEach(s => SERVICES.push({...s}));
+  lsSet('sc_services', SERVICES);
+  renderServicesGrid(currentCat);
+  renderServiceManager();
+  showToast('↺', 'Default services restored');
+}
+
+// Old function kept for compat
+function renderServiceEditTable() { renderServiceManager(); }
+function updateSvcField(i, field, val) {
+  if(field==='price') SERVICES[i].price = parseInt(val)||0;
+  else SERVICES[i][field] = val;
+}
+
+async function saveSettings() {
+  const target = parseInt(document.getElementById('set-target').value)||5000;
+  const shopname = document.getElementById('set-shopname')?.value || 'Siraj CSC';
+  lsSet('sc_target', target);
+  setSyncStatus('saving');
+  await api({action:'saveSetting', key:'sc_target', value:target});
+  await api({action:'saveSetting', key:'sc_shopname', value:shopname});
+  setSyncStatus('ok');
+  updateTotals();
+  showToast('✓', 'Settings saved & synced');
+}
+
+function updateTarget() {
+  const val = parseInt(document.getElementById('set-target').value)||5000;
+  lsSet('sc_target', val);
+  updateTotals();
+}
+
+// =================== DATA MGMT ===================
+function exportData() {
+  const all = {};
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key.startsWith('sc_')) all[key]=lsGet(key,null);
+  }
+  all['exportDate'] = new Date().toISOString();
+  all['apiUrl'] = API_URL;
+  const blob = new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'SirajCSC_backup_'+todayKey()+'.json';
+  a.click();
+  showToast('⬇','Backup downloaded');
+}
+
+function clearAllData() {
+  if(!confirm('Local cache clear hoga. Google Sheets ka data safe rahega. Confirm?')) return;
+  const keys=[];
+  for(let i=0;i<localStorage.length;i++){if(localStorage.key(i).startsWith('sc_'))keys.push(localStorage.key(i));}
+  keys.forEach(k=>localStorage.removeItem(k));
+  bill=[]; todayExpenses=[];
+  updateBillUI();
+  showToast('🗑','Local cache cleared — Sheets data safe hai');
+}
+
+// =================== MODALS ===================
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function openExpenseModal() { openModal('expenseModal'); }
+function openCustomService(prefill) {
+  if(prefill) document.getElementById('custSvcName').value = prefill;
+  openModal('customSvcModal');
+}
+
+function addCustomSvcToBill() {
+  const name = document.getElementById('custSvcName').value.trim();
+  const amt = parseInt(document.getElementById('custSvcAmount').value)||0;
+  if(!name||!amt){showToast('⚠','Fill name and amount');return;}
+  bill.push({id:'cust_'+Date.now(), name, price:amt, qty:1, amount:amt});
+  closeModal('customSvcModal');
+  document.getElementById('custSvcName').value='';
+  document.getElementById('custSvcAmount').value='';
+  updateBillUI();
+  showToast('✓', name+' added');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click', e=>{if(e.target===m)m.classList.remove('show');});
+});
+
+// =================== DAILY CLOSING ===================
+let closingExpenses = [];
+
+function initClosing() {
+  const today = todayKey();
+  document.getElementById('closingDate').value = today;
+  updateClosingDate();
+  loadPosDataForClosing(today);
+  renderClosingHistory();
+}
+
+function updateClosingDate() {
+  const date = document.getElementById('closingDate').value || todayKey();
+  const d = new Date(date + 'T12:00:00');
+  document.getElementById('closingDateLabel').textContent =
+    d.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  loadPosDataForClosing(date);
+  // Auto-load previous closing as rotation
+  loadPreviousClosingRotation(date);
+}
+
+function loadPosDataForClosing(date) {
+  const data = getDayData(date);
+  const revenue = (data.transactions||[]).reduce((s,t)=>s+(Number(t.amount)||0),0);
+  const txns = (data.transactions||[]).length;
+  const govtCost = (data.transactions||[]).reduce((s,t)=>s+(Number(t.govtCost)||0),0);
+  const expenses = (data.expenses||[]).reduce((s,e)=>s+(Number(e.amount)||0),0);
+  document.getElementById('posRevenue').textContent = '₹'+revenue;
+  document.getElementById('posTxns').textContent = txns;
+  document.getElementById('posGovtCost').textContent = '₹'+govtCost;
+  document.getElementById('posExpenses').textContent = '₹'+expenses;
+  calcClosing();
+}
+
+function loadPreviousClosingRotation(date) {
+  // Find most recent closing before this date
+  const allClosings = lsGet('sc_closings', []);
+  const prev = allClosings
+    .filter(c => c.date < date)
+    .sort((a,b) => b.date.localeCompare(a.date))[0];
+  if(prev) {
+    document.getElementById('rotation').value = prev.totalCollected || 0;
+    calcClosing();
+  }
+}
+
+function loadPreviousClosing() {
+  const date = document.getElementById('closingDate').value || todayKey();
+  const allClosings = lsGet('sc_closings', []);
+  const prev = allClosings.find(c => c.date === date);
+  if(prev) {
+    document.getElementById('d500').value = prev.d500||0;
+    document.getElementById('d200').value = prev.d200||0;
+    document.getElementById('d100').value = prev.d100||0;
+    document.getElementById('d50').value = prev.d50||0;
+    document.getElementById('d20').value = prev.d20||0;
+    document.getElementById('d10').value = prev.d10||0;
+    document.getElementById('mixCoins').value = prev.mixCoins||0;
+    document.getElementById('acBalance').value = prev.acBalance||0;
+    document.getElementById('cscWallet').value = prev.cscWallet||0;
+    document.getElementById('digiWallet').value = prev.digiWallet||0;
+    document.getElementById('jioBc').value = prev.jioBc||0;
+    document.getElementById('scCharges').value = prev.scCharges||0;
+    document.getElementById('rotation').value = prev.rotation||0;
+    document.getElementById('aadhaarCost').value = prev.aadhaarCost||0;
+    document.getElementById('c10').value = prev.c10||0;
+    document.getElementById('c5').value = prev.c5||0;
+    document.getElementById('c2').value = prev.c2||0;
+    document.getElementById('c1').value = prev.c1||0;
+    closingExpenses = prev.extraExpenses || [];
+    renderClosingExpenses();
+    calcClosing();
+    showToast('↩', date + ' ka closing loaded');
+  } else {
+    showToast('⚠', 'Is date ka closing nahi mila');
+  }
+}
+
+// Denomination sub-totals live update
+function calcClosing() {
+  const v = (id) => parseInt(document.getElementById(id)?.value)||0;
+
+  const d500 = v('d500'); const d200 = v('d200'); const d100 = v('d100');
+  const d50 = v('d50'); const d20 = v('d20'); const d10 = v('d10');
+
+  const t500=d500*500, t200=d200*200, t100=d100*100;
+  const t50=d50*50, t20=d20*20, t10=d10*10;
+
+  // Update sub-totals
+  document.getElementById('d500total').textContent = '= ₹'+t500.toLocaleString('en-IN');
+  document.getElementById('d200total').textContent = '= ₹'+t200.toLocaleString('en-IN');
+  document.getElementById('d100total').textContent = '= ₹'+t100.toLocaleString('en-IN');
+  document.getElementById('d50total').textContent  = '= ₹'+t50.toLocaleString('en-IN');
+  document.getElementById('d20total').textContent  = '= ₹'+t20.toLocaleString('en-IN');
+  document.getElementById('d10total').textContent  = '= ₹'+t10.toLocaleString('en-IN');
+
+  const aepsCash = t500+t200+t100+t50+t20+t10;
+
+  // Coins
+  const c10 = v('c10'); const c5 = v('c5'); const c2 = v('c2'); const c1 = v('c1');
+  const tc10=c10*10, tc5=c5*5, tc2=c2*2, tc1=c1*1;
+  const setEl = (id, val) => { const el=document.getElementById(id); if(el) el.textContent='= ₹'+val; };
+  setEl('c10total', tc10); setEl('c5total', tc5); setEl('c2total', tc2); setEl('c1total', tc1);
+  const coinsSubtotal = tc10+tc5+tc2+tc1;
+  const coinsEl = document.getElementById('coinsTotal');
+  if(coinsEl) coinsEl.textContent = '₹'+coinsSubtotal.toLocaleString('en-IN');
+
+  const coins = v('mixCoins') + coinsSubtotal;
+  const ac = v('acBalance');
+  const csc = v('cscWallet');
+  const digi = v('digiWallet');
+  const jio = v('jioBc');
+  const sc = v('scCharges');
+  const rotation = v('rotation');
+  const aadhaarCost = v('aadhaarCost');
+  const extraExp = closingExpenses.reduce((s,e)=>s+e.amount,0);
+
+  // POS data
+  const date = document.getElementById('closingDate')?.value || todayKey();
+  const posData = getDayData(date);
+  const posGovtCost = (posData.transactions||[]).reduce((s,t)=>s+(Number(t.govtCost)||0),0);
+
+  const total = aepsCash + coins + ac + csc + digi + jio + sc;
+  const netProfit = total - rotation - aadhaarCost - extraExp - posGovtCost;
+  const share = Math.round(netProfit / 2);
+
+  // Update AEPS total display
+  document.getElementById('aepsCashTotal').textContent = '₹'+aepsCash.toLocaleString('en-IN');
+
+  // Update result card
+  const r = (id, val) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = '₹'+val.toLocaleString('en-IN');
+  };
+  r('res-aeps', aepsCash); r('res-coins', coins);
+  r('res-ac', ac); r('res-csc', csc);
+  r('res-digi', digi); r('res-jio', jio); r('res-sc', sc);
+  r('res-total', total);
+  r('res-rotation', rotation);
+  r('res-aadhaar', aadhaarCost);
+  r('res-extra-exp', extraExp);
+  r('res-pos-govt', posGovtCost);
+
+  const profitEl = document.getElementById('res-profit');
+  if(profitEl) {
+    profitEl.textContent = '₹'+netProfit.toLocaleString('en-IN');
+    profitEl.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+  }
+  r('res-siraj', share); r('res-sohail', share);
+}
+
+function addClosingExpense() {
+  const label = document.getElementById('newExpLabel').value.trim();
+  const amt = parseInt(document.getElementById('newExpAmt').value)||0;
+  if(!label || !amt) { showToast('⚠','Naam aur amount daalo'); return; }
+  closingExpenses.push({label, amount:amt, id:Date.now()});
+  document.getElementById('newExpLabel').value = '';
+  document.getElementById('newExpAmt').value = '';
+  renderClosingExpenses();
+  calcClosing();
+}
+
+function removeClosingExpense(id) {
+  closingExpenses = closingExpenses.filter(e=>e.id!==id);
+  renderClosingExpenses();
+  calcClosing();
+}
+
+function renderClosingExpenses() {
+  const el = document.getElementById('expensesList');
+  if(!el) return;
+  if(!closingExpenses.length) { el.innerHTML=''; return; }
+  el.innerHTML = closingExpenses.map(e=>`
+    <div class="closing-row">
+      <span class="closing-row-label" style="color:var(--danger);">− ${e.label}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--danger);font-weight:600;">₹${e.amount}</span>
+        <button onclick="removeClosingExpense(${e.id})" style="background:var(--red-bg);border:none;color:var(--danger);cursor:pointer;border-radius:5px;padding:2px 8px;font-size:12px;">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+async function saveClosing() {
+  const date = document.getElementById('closingDate').value || todayKey();
+  const v = (id) => parseInt(document.getElementById(id)?.value)||0;
+  const closing = {
+    date,
+    d500:v('d500'), d200:v('d200'), d100:v('d100'),
+    d50:v('d50'), d20:v('d20'), d10:v('d10'),
+    mixCoins:v('mixCoins'), c10:v('c10'), c5:v('c5'), c2:v('c2'), c1:v('c1'),
+    acBalance:v('acBalance'), cscWallet:v('cscWallet'),
+    digiWallet:v('digiWallet'), jioBc:v('jioBc'), scCharges:v('scCharges'),
+    rotation:v('rotation'),
+    aadhaarCost:v('aadhaarCost'),
+    extraExpenses: closingExpenses,
+    savedAt: new Date().toISOString()
+  };
+
+  // Calculate totals
+  const aepsCash = closing.d500*500+closing.d200*200+closing.d100*100+
+    closing.d50*50+closing.d20*20+closing.d10*10;
+  const totalCollected = aepsCash+closing.mixCoins+closing.acBalance+
+    closing.cscWallet+closing.digiWallet+closing.jioBc+closing.scCharges;
+  const posData = getDayData(date);
+  const posGovtCost = (posData.transactions||[]).reduce((s,t)=>s+(Number(t.govtCost)||0),0);
+  const extraExp = closingExpenses.reduce((s,e)=>s+e.amount,0);
+  const aadhaarCost = closing.aadhaarCost||0;
+  const netProfit = totalCollected - closing.rotation - aadhaarCost - extraExp - posGovtCost;
+  closing.totalCollected = totalCollected;
+  closing.netProfit = netProfit;
+  closing.sirajShare = Math.round(netProfit/2);
+  closing.sohailShare = Math.round(netProfit/2);
+
+  // Save locally
+  const allClosings = lsGet('sc_closings', []);
+  const existIdx = allClosings.findIndex(c=>c.date===date);
+  if(existIdx>=0) allClosings[existIdx] = closing;
+  else allClosings.push(closing);
+  lsSet('sc_closings', allClosings);
+
+  // Save to Sheets
+  setSyncStatus('saving');
+  await api({action:'saveSetting', key:'closing_'+date, value: JSON.stringify(closing)});
+  setSyncStatus('ok');
+
+  renderClosingHistory();
+  showToast('✓', 'Closing saved! Net Profit: ₹'+netProfit.toLocaleString('en-IN'));
+}
+
+function renderClosingHistory() {
+  const el = document.getElementById('closingHistory');
+  if(!el) return;
+  const allClosings = lsGet('sc_closings', []).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
+  if(!allClosings.length) {
+    el.innerHTML='<div style="color:var(--text3);text-align:center;padding:20px;font-size:13px;">Abhi tak koi closing save nahi hui</div>';
+    return;
+  }
+  el.innerHTML = allClosings.map(c=>{
+    const d = new Date(c.date+'T12:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+    const profitColor = c.netProfit>=0 ? 'var(--success)' : 'var(--danger)';
+    return `
+    <div class="closing-history-item">
+      <div>
+        <div style="font-weight:600;font-size:14px;color:var(--text1);">${d}</div>
+        <div style="font-size:11px;color:var(--text3);">Total: ₹${(c.totalCollected||0).toLocaleString('en-IN')} | Rotation: ₹${(c.rotation||0).toLocaleString('en-IN')}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:${profitColor};">₹${(c.netProfit||0).toLocaleString('en-IN')}</div>
+        <div style="font-size:11px;color:var(--info);">Each: ₹${(c.sirajShare||0).toLocaleString('en-IN')}</div>
+      </div>
+    </div>`}).join('');
+}
+
+function printClosing() {
+  const date = document.getElementById('closingDate').value || todayKey();
+  const d = new Date(date+'T12:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const v = (id) => parseInt(document.getElementById(id)?.value)||0;
+  const aepsCash = v('d500')*500+v('d200')*200+v('d100')*100+v('d50')*50+v('d20')*20+v('d10')*10;
+  const total = parseInt(document.getElementById('res-total')?.textContent?.replace(/[^0-9]/g,''))||0;
+  const profit = parseInt(document.getElementById('res-profit')?.textContent?.replace(/[^0-9]/g,''))||0;
+  const share = Math.round(profit/2);
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Closing ${date}</title>
+  <style>body{font-family:sans-serif;max-width:320px;margin:0 auto;padding:20px;font-size:13px;}
+  h2{text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:12px;}
+  .row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;}
+  .total{font-weight:bold;font-size:15px;padding:10px 0;border-top:2px solid #000;display:flex;justify-content:space-between;}
+  .profit{background:#f0fdf4;padding:10px;border-radius:6px;margin:10px 0;text-align:center;font-size:18px;font-weight:bold;color:#15803d;}
+  .share{display:flex;justify-content:space-around;background:#eff6ff;padding:10px;border-radius:6px;}
+  .footer{text-align:center;font-size:11px;color:#666;margin-top:16px;}
+  </style></head><body>
+  <h2>SIRAJ CSC — Daily Closing</h2>
+  <p style="text-align:center;color:#666;margin-bottom:12px;">${d}</p>
+  <div class="row"><span>AEPS Cash</span><span>₹${aepsCash.toLocaleString('en-IN')}</span></div>
+  <div class="row"><span>Mix Coins</span><span>₹${v('mixCoins')}</span></div>
+  <div class="row"><span>A/c Balance</span><span>₹${v('acBalance').toLocaleString('en-IN')}</span></div>
+  <div class="row"><span>CSC Wallet</span><span>₹${v('cscWallet').toLocaleString('en-IN')}</span></div>
+  <div class="row"><span>Digi/Digipay</span><span>₹${v('digiWallet').toLocaleString('en-IN')}</span></div>
+  <div class="row"><span>Jio BC</span><span>₹${v('jioBc').toLocaleString('en-IN')}</span></div>
+  <div class="row"><span>SC Charges</span><span>₹${v('scCharges').toLocaleString('en-IN')}</span></div>
+  <div class="total"><span>Total Collected</span><span>₹${total.toLocaleString('en-IN')}</span></div>
+  <div class="row"><span>− Rotation</span><span>₹${v('rotation').toLocaleString('en-IN')}</span></div>
+  ${v('aadhaarCost')>0?`<div class="row"><span>− Aadhaar Cost</span><span>₹${v('aadhaarCost').toLocaleString('en-IN')}</span></div>`:''}
+  ${closingExpenses.map(e=>`<div class="row"><span>− ${e.label}</span><span>₹${e.amount}</span></div>`).join('')}
+  <div class="profit">Net Profit: ₹${profit.toLocaleString('en-IN')}</div>
+  <div class="share">
+    <div style="text-align:center;"><div style="font-size:11px;color:#666;">SIRAJ</div><div style="font-size:18px;font-weight:bold;color:#0369a1;">₹${share.toLocaleString('en-IN')}</div></div>
+    <div style="text-align:center;"><div style="font-size:11px;color:#666;">SOHAIL</div><div style="font-size:18px;font-weight:bold;color:#0369a1;">₹${share.toLocaleString('en-IN')}</div></div>
+  </div>
+  <div class="footer">Siraj CSC Command Center | ${new Date().toLocaleString('en-IN')}</div>
+  </body></html>`);
+  win.print();
+}
+
+function resetClosing() {
+  if(!confirm('Saare fields clear ho jaayenge. Sure?')) return;
+  ['d500','d200','d100','d50','d20','d10','c10','c5','c2','c1','mixCoins','acBalance','cscWallet','digiWallet','jioBc','scCharges','rotation','aadhaarCost'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value = 0;
+  });
+  closingExpenses = [];
+  renderClosingExpenses();
+  calcClosing();
+}
+// =================== CUSTOMER DETAIL ===================
+let currentDetailMobile = '';
+
+async function openCustomerDetail(mobile) {
+  currentDetailMobile = mobile;
+  const custs = lsGet('sc_customers', []);
+  const c = custs.find(x => x.mobile === mobile);
+  if(!c) { showToast('⚠', 'Customer not found'); return; }
+
+  const colors = [['#fff7ed','#e07b00'],['#eff6ff','#1d4ed8'],['#f0fdf4','#15803d'],['#fffbeb','#b45309'],['#faf5ff','#7c3aed']];
+  const ci = custs.indexOf(c) % colors.length;
+  const [bg, fg] = colors[ci];
+  const initials = c.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+
+  // Set header
+  document.getElementById('cdAvatar').style.background = bg;
+  document.getElementById('cdAvatar').style.color = fg;
+  document.getElementById('cdAvatar').textContent = initials;
+  document.getElementById('cdName').textContent = c.name;
+  document.getElementById('cdMobile').textContent = mobile;
+
+  // Set stats
+  const avgVisit = c.visits ? Math.round((c.totalBusiness||0)/c.visits) : 0;
+  const daysSince = c.lastVisit ? Math.floor((new Date()-new Date(c.lastVisit))/86400000) : null;
+  const lastStr = daysSince===null?'Never':daysSince===0?'Today':daysSince===1?'Yesterday':daysSince+' days ago';
+  document.getElementById('cdStats').innerHTML = `
+    <div class="cd-stat-card"><div class="cd-stat-label">Total Visits</div><div class="cd-stat-val">${c.visits||0}</div></div>
+    <div class="cd-stat-card"><div class="cd-stat-label">Total Spent</div><div class="cd-stat-val money">₹${(c.totalBusiness||0).toLocaleString('en-IN')}</div></div>
+    <div class="cd-stat-card"><div class="cd-stat-label">Avg/Visit</div><div class="cd-stat-val">₹${avgVisit.toLocaleString('en-IN')}</div></div>
+    <div class="cd-stat-card"><div class="cd-stat-label">First Visit</div><div class="cd-stat-val" style="font-size:13px;">${c.firstVisit||'—'}</div></div>
+    <div class="cd-stat-card"><div class="cd-stat-label">Last Visit</div><div class="cd-stat-val" style="font-size:13px;color:var(--success);">${lastStr}</div></div>
+    <div class="cd-stat-card"><div class="cd-stat-label">Member Since</div><div class="cd-stat-val" style="font-size:13px;">${c.firstVisit ? Math.floor((new Date()-new Date(c.firstVisit))/86400000)+' days' : '—'}</div></div>`;
+
+  // Build transaction history from all local days
+  const allTxns = [];
+  // Check all stored days
+  for(let i=0; i<localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if(key && key.startsWith('sc_day_')) {
+      const dayData = lsGet(key, {transactions:[]});
+      (dayData.transactions||[]).forEach(t => {
+        if(String(t.custMobile) === String(mobile)) {
+          allTxns.push({...t, date: key.replace('sc_day_','')});
+        }
+      });
+    }
+  }
+
+  // Also try to fetch from Sheets history
+  try {
+    const res = await api({action:'getHistory', mobile});
+    if(res.ok && res.data && res.data.length > 0) {
+      res.data.forEach(r => {
+        const exists = allTxns.find(t => t.date===r.date && t.name===r.service && t.amount===Number(r.amount));
+        if(!exists) allTxns.push({name:r.service, amount:Number(r.amount), date:r.date, time:'', qty:1});
+      });
+    }
+  } catch(e) {}
+
+  // Sort by date desc
+  allTxns.sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time));
+
+  // Service breakdown
+  const svcMap = {};
+  allTxns.forEach(t => {
+    const nm = t.name.startsWith('AEPS') ? 'AEPS' : t.name;
+    svcMap[nm] = svcMap[nm] || {count:0, total:0};
+    svcMap[nm].count++;
+    svcMap[nm].total += Number(t.amount)||0;
+  });
+  const svcList = Object.entries(svcMap).sort((a,b)=>b[1].total-a[1].total);
+
+  document.getElementById('cdServiceBreakdown').innerHTML = svcList.length
+    ? svcList.map(([name,data]) => `
+        <div class="cd-svc-row">
+          <div>
+            <div class="cd-svc-name">${name}</div>
+            <div class="cd-svc-count">${data.count} time${data.count>1?'s':''}</div>
+          </div>
+          <div class="cd-svc-amt">₹${data.total.toLocaleString('en-IN')}</div>
+        </div>`).join('')
+    : '<div style="color:var(--text3);font-size:13px;padding:10px 0;">No services yet</div>';
+
+  // Transaction history
+  document.getElementById('cdHistory').innerHTML = allTxns.length
+    ? allTxns.map(t => {
+        const dateStr = t.date ? new Date(t.date+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'2-digit'}) : '—';
+        return `<div class="cd-txn-row">
+          <div class="cd-txn-name">${t.name}${t.qty>1?` ×${t.qty}`:''}</div>
+          <div class="cd-txn-date">${dateStr}${t.time?' '+t.time:''}</div>
+          <div class="cd-txn-amt">₹${Number(t.amount).toLocaleString('en-IN')}</div>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--text3);font-size:13px;padding:20px 0;text-align:center;">Koi history nahi mili</div>';
+
+  openModal('custDetailModal');
+}
+
+function prefillBillForCustomer() {
+  closeModal('custDetailModal');
+  // Switch to POS and fill mobile
+  showScreen('pos', document.querySelector('.nav-tab'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('[onclick*="pos"]').classList.add('active');
+  setTimeout(()=>{
+    const el = document.getElementById('custMobile');
+    if(el) { el.value = currentDetailMobile; lookupCustomer(); }
+  }, 100);
+}
+
+let toastTimer;
+function showToast(icon, msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// =================== START ===================
+init();
+</script>
+</body>
+</html>
