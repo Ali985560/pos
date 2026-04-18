@@ -1348,9 +1348,37 @@ function startClock() {
 let crmCustomers = [];
 let crmFamilies = [];
 
+async function cleanupDuplicateCustomers() {
+  if (localStorage.getItem('csc_cleaned_dups_v1')) return;
+  const mobileMap = {};
+  const toDelete = [];
+  crmCustomers.forEach(c => {
+    if (!c.mobile || c.mobile.length < 10) return;
+    if (!mobileMap[c.mobile]) mobileMap[c.mobile] = [];
+    mobileMap[c.mobile].push(c);
+  });
+  for (const mobile in mobileMap) {
+    if (mobileMap[mobile].length > 1) {
+      const sorted = mobileMap[mobile].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      for (let i = 1; i < sorted.length; i++) {
+        toDelete.push(sorted[i].id);
+      }
+    }
+  }
+  if (toDelete.length > 0) {
+    for (const id of toDelete) {
+      await API.delete('Customers', id);
+      crmCustomers = crmCustomers.filter(c => c.id !== id);
+    }
+    console.log('Cleaned up duplicate customers:', toDelete.length);
+  }
+  localStorage.setItem('csc_cleaned_dups_v1', 'true');
+}
+
 async function initCRM() {
   crmCustomers = await getData('Customers');
   crmFamilies = await getData('Families');
+  await cleanupDuplicateCustomers();
   renderCRMList(crmCustomers);
 }
 
@@ -1784,9 +1812,39 @@ function setPaymentMode(mode, btnElement) {
 }
 
 // ── RECEIPT & SAVE LOGIC ──
-function prepareTransaction() {
-  if (!billingState.customer) { alert('Please select a customer first.'); return null; }
+async function prepareTransaction() {
+  if (!billingState.customer) {
+    const searchInput = document.getElementById('billing-customer-search').value.trim();
+    if (/^\d{10}$/.test(searchInput)) {
+      let existing = crmCustomers.find(c => c.mobile === searchInput);
+      const currentUser = JSON.parse(sessionStorage.getItem('csc_current_user') || '{}');
+      if (existing) {
+        billingState.customer = existing;
+      } else {
+        const newCust = {
+          id: `cust_${Date.now()}`,
+          name: 'Unknown',
+          mobile: searchInput,
+          createdAt: new Date().toISOString(),
+          createdBy: currentUser.id || 'admin'
+        };
+        const saved = await saveData('Customers', newCust);
+        crmCustomers.push(saved);
+        billingState.customer = saved;
+        if (typeof renderCRMList === 'function') renderCRMList(crmCustomers);
+      }
+    } else {
+      alert('Please select a customer or type a valid 10-digit mobile number.'); 
+      return null; 
+    }
+  }
+  
   if (billingState.cart.length === 0) { alert('Cart is empty.'); return null; }
+  
+  // Update existing customer stats (upsert logic)
+  await updateDataRow('Customers', billingState.customer.id, { 
+     updatedAt: new Date().toISOString()
+  });
   
   const currentUser = JSON.parse(sessionStorage.getItem('csc_current_user') || '{}');
   const billId = currentSavedBillId || `BILL_${Date.now().toString().slice(-6)}`;
@@ -1810,7 +1868,7 @@ function prepareTransaction() {
 async function saveBillOnly() {
   if (currentSavedBillId) return alert('This bill is already saved! You can print or send it via WhatsApp.');
   
-  const tx = prepareTransaction();
+  const tx = await prepareTransaction();
   if (!tx) return;
   
   currentSavedBillId = tx.billId; // Lock it so subsequent saves/prints use this ID
@@ -1831,8 +1889,8 @@ async function saveBillOnly() {
   alert('Bill saved successfully! You can now print or send via WhatsApp.');
 }
 
-function printReceiptOnly() {
-  const tx = prepareTransaction();
+async function printReceiptOnly() {
+  const tx = await prepareTransaction();
   if (!tx) return;
   injectReceiptHTML({
     ...tx,
@@ -1843,8 +1901,8 @@ function printReceiptOnly() {
   window.print();
 }
 
-function whatsappReceiptOnly() {
-  const tx = prepareTransaction();
+async function whatsappReceiptOnly() {
+  const tx = await prepareTransaction();
   if (!tx) return;
   sendWhatsAppReceipt(tx, billingState.cart);
 }
