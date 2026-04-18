@@ -1,0 +1,2403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIRAJ CSC Command Center</title>
+<meta name="description" content="SIRAJ Common Service Centre — Business Management System, Kalaburagi, Karnataka">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ── TOKENS ── */
+:root{
+  --c-primary:#6366f1;--c-primary-d:#4f46e5;--c-primary-l:#818cf8;
+  --c-accent:#f59e0b;--c-success:#10b981;--c-danger:#ef4444;--c-warning:#f59e0b;
+  --bg-base:#0f0f1a;--bg-surface:#1a1a2e;--bg-elevated:#16213e;--bg-sidebar:#12122a;
+  --text-primary:#f0f0f5;--text-secondary:#a0a0b8;--text-muted:#6b6b8a;
+  --border-subtle:rgba(255,255,255,.06);--border-default:rgba(255,255,255,.10);--border-em:rgba(99,102,241,.4);
+  --sp-xs:4px;--sp-sm:8px;--sp-md:16px;--sp-lg:24px;--sp-xl:32px;
+  --r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:24px;--r-full:9999px;
+  --sh-sm:0 1px 3px rgba(0,0,0,.4);--sh-md:0 4px 16px rgba(0,0,0,.5);--sh-lg:0 8px 32px rgba(0,0,0,.6);--sh-glow:0 0 20px rgba(99,102,241,.25);
+  --sidebar-w:240px;--topbar-h:56px;--tr:0.2s ease;
+}
+/* ── RESET ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg-base);color:var(--text-primary);min-height:100vh;overflow:hidden}
+a{color:var(--c-primary-l);text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit}
+ul{list-style:none}
+
+/* ── LAYOUT ── */
+#app{height:100vh}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,rgba(99,102,241,.15) 0%,var(--bg-base) 70%)}
+#main-app{display:none;grid-template-columns:var(--sidebar-w) 1fr;height:100vh}
+#main-app.visible{display:grid}
+#content{display:flex;flex-direction:column;height:100vh;overflow:hidden;background:var(--bg-base)}
+#module-container{flex:1;overflow-y:auto;padding:var(--sp-lg);scrollbar-width:thin;scrollbar-color:var(--border-default) transparent}
+#module-container::-webkit-scrollbar{width:5px}
+#module-container::-webkit-scrollbar-thumb{background:var(--border-default);border-radius:var(--r-full)}
+
+/* ── MODULE PANELS ── */
+.module-panel{display:none;animation:fadeIn .2s ease}
+.module-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.module-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:var(--sp-md);color:var(--text-muted)}
+.placeholder-icon{font-size:3rem;opacity:.4}
+.module-placeholder h3{font-size:1.4rem;font-weight:600;color:var(--text-secondary)}
+.module-placeholder p{font-size:.9rem;max-width:320px}
+
+/* ── LOGIN SCREEN ── */
+.login-card{background:rgba(26,26,46,.95);backdrop-filter:blur(20px);border:1px solid var(--border-subtle);border-radius:var(--r-xl);padding:48px 40px;width:100%;max-width:380px;box-shadow:var(--sh-lg);display:flex;flex-direction:column;align-items:center;gap:var(--sp-lg)}
+.login-logo{display:flex;flex-direction:column;align-items:center;gap:var(--sp-sm)}
+.login-logo-badge{background:linear-gradient(135deg,var(--c-primary),var(--c-accent));color:#fff;font-size:1.3rem;font-weight:700;padding:12px 18px;border-radius:var(--r-lg);letter-spacing:.05em;box-shadow:var(--sh-glow)}
+.login-title{font-size:1.8rem;font-weight:700;background:linear-gradient(135deg,var(--c-primary-l),var(--c-accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.login-subtitle{font-size:.85rem;color:var(--text-secondary);font-weight:500}
+.login-location{font-size:.75rem;color:var(--text-muted)}
+.pin-display{display:flex;flex-direction:column;align-items:center;gap:var(--sp-sm);width:100%}
+.pin-dots{display:flex;gap:16px;justify-content:center}
+.pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border-default);background:transparent;transition:all .15s ease}
+.pin-dot.filled{background:var(--c-primary);border-color:var(--c-primary);box-shadow:0 0 10px rgba(99,102,241,.5);transform:scale(1.1)}
+.pin-hint{font-size:.8rem;color:var(--text-muted)}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+.numpad-btn{aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--border-subtle);font-size:1.4rem;font-weight:500;color:var(--text-primary);transition:all .15s ease;display:flex;align-items:center;justify-content:center}
+.numpad-btn:hover:not(:disabled){background:rgba(99,102,241,.2);border-color:var(--c-primary);color:var(--c-primary-l);box-shadow:var(--sh-glow)}
+.numpad-btn:active:not(:disabled){transform:scale(.95)}
+.numpad-btn.numpad-empty{background:transparent;border-color:transparent;cursor:default}
+.numpad-btn.numpad-back{font-size:1.1rem;color:var(--text-secondary)}
+.login-error{min-height:1.2rem;font-size:.8rem;color:var(--c-danger);font-weight:500;text-align:center}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.shake{animation:shake .4s ease}
+
+/* ── SIDEBAR ── */
+#sidebar{background:var(--bg-sidebar);border-right:1px solid var(--border-subtle);display:flex;flex-direction:column;height:100vh;overflow:hidden;transition:width var(--tr)}
+.sidebar-logo{padding:var(--sp-lg) var(--sp-md);display:flex;align-items:center;gap:var(--sp-sm);border-bottom:1px solid var(--border-subtle);min-height:var(--topbar-h)}
+.logo-badge{background:linear-gradient(135deg,var(--c-primary),var(--c-accent));color:#fff;font-size:.75rem;font-weight:700;padding:6px 8px;border-radius:var(--r-sm);letter-spacing:.05em;flex-shrink:0}
+.logo-text{display:flex;flex-direction:column}
+.logo-name{font-size:.9rem;font-weight:700;color:var(--text-primary)}
+.logo-sub{font-size:.65rem;color:var(--text-muted)}
+#sidebar-nav{flex:1;overflow-y:auto;padding:var(--sp-sm) 0;scrollbar-width:none}
+#sidebar-nav::-webkit-scrollbar{display:none}
+#nav-list li{margin:2px var(--sp-sm)}
+#nav-list li a{display:flex;align-items:center;gap:10px;padding:9px var(--sp-sm);border-radius:var(--r-md);color:var(--text-secondary);font-size:.82rem;font-weight:500;cursor:pointer;transition:all var(--tr);white-space:nowrap;overflow:hidden}
+#nav-list li a:hover{background:rgba(255,255,255,.05);color:var(--text-primary)}
+#nav-list li.nav-active a{background:rgba(99,102,241,.15);color:var(--c-primary-l);border-left:3px solid var(--c-primary);padding-left:calc(var(--sp-sm) - 3px)}
+#nav-list li a svg{flex-shrink:0;opacity:.7}
+#nav-list li.nav-active a svg{opacity:1}
+.sidebar-footer{border-top:1px solid var(--border-subtle);padding:var(--sp-md);display:flex;align-items:center;gap:var(--sp-sm)}
+.sidebar-user{display:flex;align-items:center;gap:var(--sp-sm);flex:1;overflow:hidden}
+.user-avatar-sm{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--c-primary),var(--c-primary-d));display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff;flex-shrink:0}
+.sidebar-user-info{display:flex;flex-direction:column;overflow:hidden}
+.sidebar-user-info span:first-child{font-size:.78rem;font-weight:500;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn-logout{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all var(--tr);flex-shrink:0;font-size:1rem}
+.btn-logout:hover{background:rgba(239,68,68,.15);color:var(--c-danger)}
+
+/* ── TOP BAR ── */
+#top-bar{height:var(--topbar-h);background:var(--bg-elevated);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:0 var(--sp-lg);flex-shrink:0;gap:var(--sp-md)}
+.topbar-left{display:flex;align-items:center;gap:var(--sp-md)}
+#sidebar-toggle{width:36px;height:36px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all var(--tr)}
+#sidebar-toggle:hover{background:rgba(255,255,255,.06);color:var(--text-primary)}
+#topbar-module-title{font-size:1rem;font-weight:600;color:var(--text-primary)}
+.topbar-right{display:flex;align-items:center;gap:var(--sp-md)}
+.topbar-time{font-size:.75rem;color:var(--text-muted);white-space:nowrap}
+.topbar-user{display:flex;align-items:center;gap:var(--sp-sm)}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--c-primary),var(--c-primary-d));display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff;flex-shrink:0}
+.topbar-user-details{display:flex;flex-direction:column}
+.topbar-user-details span:first-child{font-size:.78rem;font-weight:500;color:var(--text-primary)}
+.role-badge{font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+
+/* ── SYNC PILL ── */
+.sync-pill{font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:var(--r-full)}
+.sync-synced{color:var(--c-success);background:rgba(16,185,129,.1)}
+.sync-pending{color:var(--c-warning);background:rgba(245,158,11,.1)}
+.sync-offline{color:var(--text-muted);background:rgba(255,255,255,.05)}
+.sync-error{color:var(--c-danger);background:rgba(239,68,68,.1)}
+
+/* ── CARDS ── */
+.card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:var(--sp-lg);box-shadow:var(--sh-sm);transition:border-color var(--tr),box-shadow var(--tr)}
+.card:hover{border-color:var(--border-em);box-shadow:var(--sh-glow)}
+.card-title{font-size:.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:var(--sp-md)}
+.kpi-card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:var(--sp-lg);border-top:3px solid var(--c-primary);position:relative;overflow:hidden}
+.kpi-value{font-size:2rem;font-weight:700;color:var(--text-primary);line-height:1}
+.kpi-label{font-size:.78rem;color:var(--text-muted);margin-top:4px}
+.kpi-sub{font-size:.72rem;color:var(--text-secondary);margin-top:var(--sp-sm)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-md)}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-md)}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-md)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r-md);font-size:.84rem;font-weight:500;transition:all var(--tr);cursor:pointer;border:1px solid transparent}
+.btn-primary{background:var(--c-primary);color:#fff;border-color:var(--c-primary)}
+.btn-primary:hover{background:var(--c-primary-d);box-shadow:var(--sh-glow)}
+.btn-secondary{background:transparent;color:var(--text-secondary);border-color:var(--border-default)}
+.btn-secondary:hover{border-color:var(--c-primary);color:var(--c-primary-l)}
+.btn-success{background:var(--c-success);color:#fff}
+.btn-danger{background:var(--c-danger);color:#fff}
+.btn-sm{padding:5px 10px;font-size:.75rem}
+.btn-icon{width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-md)}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--r-full);font-size:.68rem;font-weight:600}
+.badge-success{background:rgba(16,185,129,.15);color:var(--c-success)}
+.badge-warning{background:rgba(245,158,11,.15);color:var(--c-warning)}
+.badge-danger{background:rgba(239,68,68,.15);color:var(--c-danger)}
+.badge-info{background:rgba(99,102,241,.15);color:var(--c-primary-l)}
+.badge-muted{background:rgba(255,255,255,.06);color:var(--text-muted)}
+
+/* ── INPUTS ── */
+.input,.select,.textarea{background:var(--bg-base);border:1px solid var(--border-default);border-radius:var(--r-md);color:var(--text-primary);padding:9px 13px;font-size:.84rem;width:100%;outline:none;transition:border-color var(--tr),box-shadow var(--tr)}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--c-primary);box-shadow:0 0 0 3px rgba(99,102,241,.15)}
+.input::placeholder,.textarea::placeholder{color:var(--text-muted)}
+.select option{background:var(--bg-surface)}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:.78rem;font-weight:500;color:var(--text-secondary)}
+
+/* ── TABLE ── */
+.data-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.data-table th{background:var(--bg-elevated);color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:10px 12px;text-align:left;border-bottom:1px solid var(--border-subtle);font-size:.72rem}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--border-subtle);color:var(--text-secondary)}
+.data-table tr:hover td{background:rgba(255,255,255,.02);color:var(--text-primary)}
+.data-table tr:last-child td{border-bottom:none}
+
+/* ── PROGRESS BAR ── */
+.progress-bar{height:6px;background:rgba(255,255,255,.06);border-radius:var(--r-full);overflow:hidden}
+.progress-fill{height:100%;border-radius:var(--r-full);background:linear-gradient(90deg,var(--c-primary),var(--c-accent));transition:width .4s ease}
+
+/* ── UTILITIES ── */
+.flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-between{justify-content:space-between}
+.gap-sm{gap:var(--sp-sm)}.gap-md{gap:var(--sp-md)}.gap-lg{gap:var(--sp-lg)}
+.mt-sm{margin-top:var(--sp-sm)}.mt-md{margin-top:var(--sp-md)}.mt-lg{margin-top:var(--sp-lg)}
+.mb-sm{margin-bottom:var(--sp-sm)}.mb-md{margin-bottom:var(--sp-md)}
+.text-muted{color:var(--text-muted)}.text-success{color:var(--c-success)}.text-danger{color:var(--c-danger)}.text-warning{color:var(--c-warning)}.text-primary-c{color:var(--c-primary-l)}
+.font-bold{font-weight:700}.font-semibold{font-weight:600}
+.w-full{width:100%}.hidden{display:none!important}
+.text-sm{font-size:.82rem}.text-xs{font-size:.72rem}.text-lg{font-size:1.1rem}
+.truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── CRM MODULE ── */
+.crm-list { list-style: none; margin: 0; padding: 0; }
+.crm-list-item { padding: var(--sp-md); border-bottom: 1px solid var(--border-default); cursor: pointer; transition: background var(--tr); display: flex; flex-direction: column; gap: 4px; }
+.crm-list-item:hover { background: rgba(255,255,255,.03); }
+.crm-list-item.active { background: rgba(99,102,241,.1); border-left: 3px solid var(--c-primary); padding-left: calc(var(--sp-md) - 3px); }
+.crm-list-item-name { font-weight: 600; color: var(--text-primary); font-size: .9rem; }
+.crm-list-item-sub { font-size: .75rem; color: var(--text-muted); display: flex; gap: 8px; align-items: center; }
+.crm-profile-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--sp-lg); border-bottom: 1px solid var(--border-subtle); padding-bottom: var(--sp-md); }
+.crm-profile-name { font-size: 1.4rem; font-weight: 700; color: var(--c-primary-l); margin-bottom: 4px; }
+.crm-profile-meta { font-size: .85rem; color: var(--text-secondary); display: flex; gap: var(--sp-md); }
+.crm-section-title { font-size: .9rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); margin: var(--sp-lg) 0 var(--sp-sm) 0; }
+.family-member-card { background: var(--bg-elevated); border: 1px solid var(--border-default); padding: var(--sp-sm) var(--sp-md); border-radius: var(--r-md); display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-sm); }
+.family-tag { font-size: .7rem; padding: 2px 6px; background: rgba(255,255,255,.1); border-radius: 4px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
+
+/* ── BILLING MODULE ── */
+.dropdown-menu { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--r-md); box-shadow: var(--sh-md); z-index: 50; max-height: 250px; overflow-y: auto; margin-top: 4px; }
+.dropdown-item { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border-subtle); transition: background var(--tr); }
+.dropdown-item:hover { background: rgba(255,255,255,.05); }
+.service-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; overflow-y: auto; align-content: flex-start; }
+.service-card { background: var(--bg-elevated); border: 1px solid var(--border-default); border-radius: var(--r-md); padding: 12px; cursor: pointer; transition: all var(--tr); display: flex; flex-direction: column; gap: 6px; }
+.service-card:hover { border-color: var(--c-primary); background: rgba(99,102,241,.05); }
+.service-card:active { transform: scale(0.97); }
+.service-card-title { font-size: .78rem; font-weight: 600; color: var(--text-primary); line-height: 1.3; }
+.service-card-price { font-size: .85rem; color: var(--c-success); font-weight: 700; }
+.cart-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed var(--border-default); gap: 10px; }
+.cart-item-info { flex: 1; }
+.cart-item-name { font-size: .85rem; font-weight: 600; color: var(--text-primary); }
+.cart-item-price-input { width: 70px; text-align: right; background: rgba(255,255,255,.05); border: 1px solid var(--border-default); border-radius: 4px; color: var(--c-success); font-weight: 700; padding: 4px 8px; font-family: inherit; }
+.cart-item-price-input:focus { border-color: var(--c-primary); outline: none; }
+.payment-mode-btn.active { background: rgba(99,102,241,.15); border-color: var(--c-primary); color: var(--c-primary-l); }
+
+/* ── PIPELINE MODULE ── */
+.kanban-board { display: flex; gap: var(--sp-md); overflow-x: auto; padding-bottom: var(--sp-md); height: calc(100vh - 150px); align-items: flex-start; scrollbar-width: thin; scrollbar-color: var(--border-default) transparent; }
+.kanban-column { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: var(--r-md); min-width: 280px; width: 280px; display: flex; flex-direction: column; max-height: 100%; flex-shrink: 0; }
+.kanban-column-header { padding: 12px var(--sp-md); font-weight: 600; font-size: .85rem; color: var(--text-primary); border-bottom: 2px solid var(--border-default); display: flex; justify-content: space-between; align-items: center; }
+.kanban-column-count { background: rgba(255,255,255,.1); padding: 2px 8px; border-radius: var(--r-full); font-size: .7rem; }
+.kanban-cards { padding: var(--sp-sm); flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: var(--sp-sm); min-height: 50px; }
+.kanban-card { background: var(--bg-surface); border: 1px solid var(--border-default); padding: 12px; border-radius: var(--r-md); cursor: grab; transition: all 0.2s ease; display: flex; flex-direction: column; gap: 8px; }
+.kanban-card:active { cursor: grabbing; opacity: 0.8; transform: scale(0.98); }
+.kanban-card:hover { border-color: var(--c-primary); box-shadow: var(--sh-sm); }
+.kanban-card.drag-over { border: 2px dashed var(--c-primary); background: rgba(99,102,241,0.05); }
+.kc-title { font-weight: 600; font-size: .85rem; color: var(--text-primary); line-height: 1.3; }
+.kc-meta { font-size: .75rem; color: var(--text-muted); display: flex; gap: 6px; align-items: center; }
+.kc-badge { font-size: .65rem; padding: 2px 6px; border-radius: 4px; font-weight: 600; background: rgba(255,255,255,.05); color: var(--text-secondary); }
+
+/* ── MODALS ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
+.modal-card { width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+
+/* ── FOLLOW-UPS MODULE ── */
+.sub-nav { display: flex; gap: var(--sp-md); border-bottom: 1px solid var(--border-subtle); margin-bottom: var(--sp-md); }
+.sub-nav-btn { padding: 8px 16px; color: var(--text-muted); font-size: .85rem; font-weight: 500; border-bottom: 2px solid transparent; transition: all var(--tr); }
+.sub-nav-btn:hover { color: var(--text-primary); }
+.sub-nav-btn.active { color: var(--c-primary-l); border-bottom-color: var(--c-primary); }
+.followup-card { background: var(--bg-surface); border: 1px solid var(--border-default); border-left: 4px solid var(--border-default); padding: var(--sp-md); border-radius: var(--r-md); display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-md); transition: all var(--tr); }
+.followup-card:hover { border-color: var(--c-primary); transform: translateX(2px); }
+.followup-card.status-overdue { border-left-color: var(--c-danger); }
+.followup-card.status-today { border-left-color: var(--c-warning); }
+.followup-card.status-upcoming { border-left-color: var(--c-primary); }
+.followup-info h4 { font-size: .95rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+.followup-info p { font-size: .8rem; color: var(--text-secondary); line-height: 1.4; }
+.followup-meta { font-size: .75rem; color: var(--text-muted); margin-top: 8px; display: flex; gap: var(--sp-md); }
+.followup-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #main-app{grid-template-columns:0 1fr}
+  #sidebar{position:fixed;z-index:100;width:var(--sidebar-w);transform:translateX(-100%);transition:transform var(--tr)}
+  #sidebar.open{transform:translateX(0);box-shadow:var(--sh-lg)}
+  .grid-4{grid-template-columns:1fr 1fr}
+  .grid-3{grid-template-columns:1fr 1fr}
+  .topbar-user-details{display:none}
+}
+@media print {
+  body * { visibility: hidden; }
+  #receipt-print-area, #receipt-print-area * { visibility: visible; }
+  #receipt-print-area { position: absolute; left: 0; top: 0; width: 58mm; padding: 0; margin: 0; font-family: monospace; font-size: 12px; color: #000; }
+  .receipt-header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 5px; }
+  .receipt-title { font-weight: bold; font-size: 14px; }
+  .receipt-sub { font-size: 10px; }
+  .receipt-details { margin-bottom: 10px; font-size: 10px; }
+  .receipt-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+  .receipt-table th, .receipt-table td { text-align: left; padding: 2px 0; font-size: 10px; }
+  .receipt-table th { border-bottom: 1px dashed #000; }
+  .receipt-table .right { text-align: right; }
+  .receipt-total { border-top: 1px dashed #000; padding-top: 5px; font-weight: bold; text-align: right; margin-bottom: 10px; }
+  .receipt-footer { text-align: center; font-size: 10px; border-top: 1px dashed #000; padding-top: 5px; }
+}
+</style>
+</head>
+<body>
+<div id="receipt-print-area"></div>
+<div id="app">
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-logo-badge">CSC</div>
+        <h1 class="login-title">SIRAJ CSC</h1>
+        <p class="login-subtitle">Command Center</p>
+        <p class="login-location">Kalaburagi, Karnataka</p>
+      </div>
+      <div class="pin-display">
+        <div class="pin-dots">
+          <span class="pin-dot" id="dot-0"></span>
+          <span class="pin-dot" id="dot-1"></span>
+          <span class="pin-dot" id="dot-2"></span>
+          <span class="pin-dot" id="dot-3"></span>
+        </div>
+        <p class="pin-hint" id="pin-hint">Enter your PIN</p>
+      </div>
+      <div class="numpad">
+        <button class="numpad-btn" onclick="pinInput('1')">1</button>
+        <button class="numpad-btn" onclick="pinInput('2')">2</button>
+        <button class="numpad-btn" onclick="pinInput('3')">3</button>
+        <button class="numpad-btn" onclick="pinInput('4')">4</button>
+        <button class="numpad-btn" onclick="pinInput('5')">5</button>
+        <button class="numpad-btn" onclick="pinInput('6')">6</button>
+        <button class="numpad-btn" onclick="pinInput('7')">7</button>
+        <button class="numpad-btn" onclick="pinInput('8')">8</button>
+        <button class="numpad-btn" onclick="pinInput('9')">9</button>
+        <button class="numpad-btn numpad-empty" disabled></button>
+        <button class="numpad-btn" onclick="pinInput('0')">0</button>
+        <button class="numpad-btn numpad-back" onclick="pinBackspace()">&#9003;</button>
+      </div>
+      <p class="login-error" id="login-error"></p>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="main-app">
+    <aside id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-badge">CSC</div>
+        <div class="logo-text">
+          <span class="logo-name">SIRAJ CSC</span>
+          <span class="logo-sub">Command Center</span>
+        </div>
+      </div>
+      <nav id="sidebar-nav"><ul id="nav-list"></ul></nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="user-avatar-sm" id="sidebar-avatar">SA</div>
+          <div class="sidebar-user-info">
+            <span id="sidebar-user-name">Siraj Ali</span>
+            <span id="sidebar-user-role" class="role-badge">ADMIN</span>
+          </div>
+        </div>
+        <button class="btn-logout" onclick="logout()" title="Logout">&#9211;</button>
+      </div>
+    </aside>
+
+    <div id="content">
+      <header id="top-bar">
+        <div class="topbar-left">
+          <button id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <h2 id="topbar-module-title">Dashboard</h2>
+        </div>
+        <div class="topbar-right">
+          <div id="sync-status" class="sync-pill sync-synced">&#9679; Synced</div>
+          <div id="topbar-clock" class="topbar-time"></div>
+          <div class="topbar-user">
+            <div class="user-avatar" id="topbar-avatar">SA</div>
+            <div class="topbar-user-details">
+              <span id="topbar-user-name">Siraj Ali</span>
+              <span id="topbar-user-role" class="role-badge">ADMIN</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main id="module-container">
+        <section id="module-dashboard" class="module-panel active" data-title="Dashboard">
+          <div class="flex-col gap-md">
+            <div class="grid-4">
+              <div class="kpi-card">
+                <div class="kpi-value" id="dashboard-kpi-daily">₹0</div>
+                <div class="kpi-label">Daily Revenue</div>
+                <div class="progress-bar mt-sm"><div class="progress-fill" id="dashboard-progress-daily" style="width: 0%"></div></div>
+                <div class="kpi-sub">Target: ₹5,000</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-value" id="dashboard-kpi-monthly">₹0</div>
+                <div class="kpi-label">Monthly Revenue</div>
+                <div class="progress-bar mt-sm"><div class="progress-fill" id="dashboard-progress-monthly" style="width: 0%"></div></div>
+                <div class="kpi-sub">Target: ₹150,000</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-value" id="dashboard-kpi-cases">0</div>
+                <div class="kpi-label">Active Cases</div>
+                <div class="kpi-sub">Pipeline Items</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-value" id="dashboard-kpi-followups">0</div>
+                <div class="kpi-label">Pending Follow-ups</div>
+                <div class="kpi-sub">Due Today</div>
+              </div>
+            </div>
+            <div class="grid-2 mt-md">
+              <div class="card flex-col gap-sm">
+                <div class="card-title">7-Day Revenue</div>
+                <div style="position: relative; height: 300px; width: 100%;">
+                  <canvas id="revenueChart"></canvas>
+                </div>
+              </div>
+              <div class="flex-col gap-md">
+                <div class="card flex-col gap-sm">
+                  <div class="card-title">Top Services Today</div>
+                  <table class="data-table" id="dashboard-top-services">
+                    <thead>
+                      <tr><th>Service</th><th style="text-align: right;">Count</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr><td colspan="2" style="text-align: center;">No data yet</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="card flex-col gap-sm">
+                  <div class="card-title text-warning">Alerts</div>
+                  <ul id="dashboard-alerts" class="flex-col gap-sm">
+                    <li class="text-sm text-muted">No active alerts.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section id="module-billing" class="module-panel" data-title="Billing">
+          <div class="grid-2 billing-layout" style="height: calc(100vh - 100px);">
+            <!-- LEFT: Customer & Catalog -->
+            <div class="flex-col gap-md" style="overflow-y: auto; padding-right: var(--sp-md);">
+              <div class="card" style="position: relative;">
+                <div class="flex justify-between items-center mb-sm">
+                  <span class="form-label">Customer</span>
+                  <button class="btn btn-sm btn-secondary" onclick="switchToCRMAndNewCustomer()">+ New Customer</button>
+                </div>
+                <div style="position: relative;">
+                  <input type="text" id="billing-customer-search" class="input" placeholder="Search by name or mobile..." autocomplete="off" oninput="handleBillingCustomerSearch(this.value)">
+                  <div id="billing-customer-dropdown" class="dropdown-menu hidden"></div>
+                </div>
+                
+                <div id="billing-selected-customer" class="hidden mt-sm p-sm" style="background: rgba(16,185,129,0.1); border: 1px solid var(--c-success); border-radius: var(--r-md); padding: var(--sp-sm);">
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <div class="font-semibold text-success" id="billing-cust-name"></div>
+                      <div class="text-xs text-muted" id="billing-cust-mobile"></div>
+                    </div>
+                    <button class="btn-icon btn-sm" onclick="clearBillingCustomer()" style="color: var(--c-danger);">&#10005;</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card flex-col" style="flex: 1;">
+                <div class="flex justify-between items-center mb-md">
+                  <span class="card-title" style="margin: 0;">Services</span>
+                  <input type="text" id="billing-service-search" class="input" placeholder="Search services..." style="width: 200px;" oninput="renderServiceCatalog(this.value)">
+                </div>
+                <div id="billing-service-catalog" class="service-grid">
+                  <!-- JS populated -->
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT: Cart -->
+            <div class="card flex-col" style="overflow: hidden;">
+              <div class="card-title">Current Bill</div>
+              <div class="flex-col" style="flex: 1; overflow-y: auto; border-bottom: 1px solid var(--border-default); margin-bottom: var(--sp-md);" id="billing-cart-items">
+                <div class="text-center text-muted text-sm mt-lg">Cart is empty. Add services from the left.</div>
+              </div>
+
+              <div class="flex-col gap-md">
+                <div class="flex justify-between items-center" style="font-size: 1.2rem;">
+                  <span class="font-semibold text-secondary">Total</span>
+                  <span class="font-bold text-primary-c" id="billing-total-amount">₹0</span>
+                </div>
+                
+                <div>
+                  <span class="form-label mb-sm" style="display: block;">Payment Mode</span>
+                  <div class="grid-3">
+                    <button class="btn btn-secondary payment-mode-btn active" data-mode="Cash" onclick="setPaymentMode('Cash', this)">Cash</button>
+                    <button class="btn btn-secondary payment-mode-btn" data-mode="UPI" onclick="setPaymentMode('UPI', this)">UPI</button>
+                    <button class="btn btn-secondary payment-mode-btn" data-mode="Other" onclick="setPaymentMode('Other', this)">Other</button>
+                  </div>
+                </div>
+
+                <div class="grid-2 mt-sm">
+                  <!-- For plan 2.3, we'll hook up the actual print/save buttons -->
+                  <button class="btn btn-secondary" style="justify-content: center;" onclick="previewBill()">Preview</button>
+                  <button class="btn btn-primary" style="justify-content: center;" onclick="saveBill()">Save & Print</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section id="module-crm" class="module-panel" data-title="CRM">
+          <div class="crm-header flex justify-between items-center mb-md gap-md">
+            <div class="search-bar w-full" style="max-width: 400px; position: relative;">
+              <input type="text" id="crm-search-input" class="input" placeholder="Search by Name or Mobile..." oninput="searchCRM(this.value)">
+            </div>
+            <button class="btn btn-primary" onclick="showCustomerForm()">+ New Customer</button>
+          </div>
+          <div class="grid-2 crm-layout" style="height: calc(100vh - 160px);">
+            <div class="card crm-list-panel" style="overflow-y: auto; padding: 0;">
+              <ul id="crm-customer-list" class="crm-list">
+                <!-- populated by JS -->
+              </ul>
+            </div>
+            <div class="card crm-profile-panel" id="crm-profile-view" style="overflow-y: auto;">
+              <div class="module-placeholder" id="crm-empty-state">
+                <div class="placeholder-icon">&#128101;</div>
+                <h3>Select a Customer</h3>
+                <p>Choose a customer from the list to view their profile, family, and history.</p>
+              </div>
+              <div id="crm-profile-content" class="hidden">
+                <!-- populated by JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+        <section id="module-pipeline" class="module-panel" data-title="Pipeline">
+          <div class="flex justify-between items-center mb-md">
+            <div class="flex gap-sm">
+              <input type="text" id="pipeline-search" class="input" placeholder="Search cases..." oninput="filterPipeline()" style="width: 250px;">
+              <select id="pipeline-filter-stage" class="select" onchange="filterPipeline()">
+                <option value="All">All Stages</option>
+                <option value="New Lead">New Lead</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Application Submitted">Application Submitted</option>
+                <option value="Pending Documents">Pending Documents</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="showNewCaseModal()">+ New Case</button>
+          </div>
+          <div class="kanban-board" id="kanban-board">
+            <!-- Columns injected by JS -->
+          </div>
+        </section>
+        <section id="module-followups" class="module-panel" data-title="Follow-ups">
+          <div class="sub-nav">
+            <button class="sub-nav-btn active" onclick="setFollowupTab('today', this)">Today</button>
+            <button class="sub-nav-btn" onclick="setFollowupTab('overdue', this)">Overdue <span id="fu-badge-overdue" class="badge badge-danger hidden">0</span></button>
+            <button class="sub-nav-btn" onclick="setFollowupTab('upcoming', this)">Upcoming (7D)</button>
+          </div>
+          <div class="flex justify-between items-center mb-md">
+            <input type="text" id="followups-search" class="input" placeholder="Search customer or subject..." style="max-width: 300px;" oninput="renderFollowUps()">
+            <button class="btn btn-primary" onclick="showNewFollowupModal()">+ New Follow-up</button>
+          </div>
+          <div id="followups-list" class="flex-col gap-md" style="overflow-y: auto; height: calc(100vh - 220px);">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+        <section id="module-dayclose" class="module-panel" data-title="Day Close"><div class="module-placeholder"><div class="placeholder-icon">&#128274;</div><h3>Day Close</h3><p>Cash reconciliation &amp; EOD summary — coming in Phase 4</p></div></section>
+        <section id="module-ledger" class="module-panel" data-title="Ledger"><div class="module-placeholder"><div class="placeholder-icon">&#128214;</div><h3>Ledger</h3><p>Income, expenses &amp; 50-50 profit split — coming in Phase 4</p></div></section>
+        <section id="module-commission" class="module-panel" data-title="Commission"><div class="module-placeholder"><div class="placeholder-icon">&#37;</div><h3>Commission Calculator</h3><p>AEPS, Insurance &amp; IRCTC commissions — coming in Phase 4</p></div></section>
+        <section id="module-documents" class="module-panel" data-title="Documents"><div class="module-placeholder"><div class="placeholder-icon">&#128193;</div><h3>Documents Tracker</h3><p>Google Drive upload &amp; status tracking — coming in Phase 5</p></div></section>
+        <section id="module-reports" class="module-panel" data-title="Reports"><div class="module-placeholder"><div class="placeholder-icon">&#128202;</div><h3>Reports &amp; Analytics</h3><p>ITR/GST-ready exports &amp; staff performance — coming in Phase 5</p></div></section>
+        <section id="module-loyalty" class="module-panel" data-title="Loyalty"><div class="module-placeholder"><div class="placeholder-icon">&#9733;</div><h3>Loyalty System</h3><p>VIP customers &amp; visit streaks — coming in Phase 6</p></div></section>
+        <section id="module-campaigns" class="module-panel" data-title="Campaigns"><div class="module-placeholder"><div class="placeholder-icon">&#128227;</div><h3>Campaign Planner</h3><p>Seasonal WhatsApp campaigns — coming in Phase 6</p></div></section>
+        <section id="module-map" class="module-panel" data-title="Area Map"><div class="module-placeholder"><div class="placeholder-icon">&#128205;</div><h3>Area Map</h3><p>Customer location analytics — coming in Phase 6</p></div></section>
+        <section id="module-leads" class="module-panel" data-title="Leads"><div class="module-placeholder"><div class="placeholder-icon">&#128200;</div><h3>Leads Management</h3><p>Hot/Warm/Cold funnel — coming in Phase 6</p></div></section>
+        <section id="module-predictive" class="module-panel" data-title="Predictive CRM"><div class="module-placeholder"><div class="placeholder-icon">&#128161;</div><h3>Predictive CRM</h3><p>Next-service suggestions — coming in Phase 7</p></div></section>
+        <section id="module-audit" class="module-panel" data-title="Audit Trail"><div class="module-placeholder"><div class="placeholder-icon">&#128737;</div><h3>Audit Trail</h3><p>Immutable action log — coming in Phase 5</p></div></section>
+        <section id="module-knowledge" class="module-panel" data-title="Knowledge Base"><div class="module-placeholder"><div class="placeholder-icon">&#128218;</div><h3>Knowledge Base</h3><p>Staff training guides — coming in Phase 7</p></div></section>
+        <section id="module-staff" class="module-panel" data-title="Staff Panel"><div class="module-placeholder"><div class="placeholder-icon">&#128100;</div><h3>Staff Panel</h3><p>Role management &amp; access logs — coming in Phase 7</p></div></section>
+        <section id="module-import" class="module-panel" data-title="Import / Export"><div class="module-placeholder"><div class="placeholder-icon">&#8645;</div><h3>Import / Export</h3><p>Odoo CSV import &amp; export — coming in Phase 4</p></div></section>
+        <section id="module-settings" class="module-panel" data-title="Settings"><div class="module-placeholder"><div class="placeholder-icon">&#9881;</div><h3>Settings</h3><p>Prices, targets &amp; configuration — coming in Phase 5</p></div></section>
+      </main>
+    </div>
+  </div>
+
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div id="new-case-modal" class="modal-overlay hidden">
+    <div class="modal-card card">
+      <div class="flex justify-between items-center mb-md">
+        <h3 class="card-title" style="margin:0;">New Pipeline Case</h3>
+        <button class="btn-icon btn-sm" onclick="closeNewCaseModal()">&#10005;</button>
+      </div>
+      <div class="flex-col gap-md">
+        <div class="form-group">
+          <label class="form-label">Customer (Search Mobile/Name)</label>
+          <div style="position: relative;">
+            <input type="text" id="pipeline-new-cust-search" class="input" placeholder="Search..." oninput="handlePipelineCustSearch(this.value)">
+            <div id="pipeline-new-cust-dropdown" class="dropdown-menu hidden"></div>
+          </div>
+          <div id="pipeline-selected-cust" class="text-sm font-semibold text-success mt-sm hidden"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Service Required</label>
+          <select id="pipeline-new-service" class="select">
+            <!-- JS populated -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea id="pipeline-new-notes" class="textarea" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="mt-lg flex gap-sm">
+        <button class="btn btn-primary" onclick="submitNewCase()">Create Case</button>
+        <button class="btn btn-secondary" onclick="closeNewCaseModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="new-followup-modal" class="modal-overlay hidden">
+    <div class="modal-card card">
+      <div class="flex justify-between items-center mb-md">
+        <h3 class="card-title" style="margin:0;">New Follow-up</h3>
+        <button class="btn-icon btn-sm" onclick="closeNewFollowupModal()">&#10005;</button>
+      </div>
+      <div class="flex-col gap-md">
+        <div class="form-group">
+          <label class="form-label">Customer (Search Mobile/Name)</label>
+          <div style="position: relative;">
+            <input type="text" id="fu-new-cust-search" class="input" placeholder="Search..." oninput="handleFUCustSearch(this.value)">
+            <div id="fu-new-cust-dropdown" class="dropdown-menu hidden"></div>
+          </div>
+          <div id="fu-selected-cust" class="text-sm font-semibold text-success mt-sm hidden"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Related Service / Subject</label>
+          <input type="text" id="fu-new-subject" class="input" placeholder="e.g., Passport Verification">
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Due Date</label>
+            <input type="date" id="fu-new-date" class="input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea id="fu-new-notes" class="textarea" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="mt-lg flex gap-sm">
+        <button class="btn btn-primary" onclick="submitNewFollowup()">Create</button>
+        <button class="btn btn-secondary" onclick="closeNewFollowupModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+// ── AUTHENTICATION CONFIG ──
+const APP_CONFIG = {
+  users: [
+    { id: 'siraj',  name: 'Siraj Ali',   pin: '1234', role: 'admin',   avatar: 'SA' },
+    { id: 'staff1', name: 'Staff 1',      pin: '1111', role: 'staff',   avatar: 'S1' },
+    { id: 'staff2', name: 'Staff 2',      pin: '2222', role: 'staff',   avatar: 'S2' },
+    { id: 'sohail', name: 'Sohail',       pin: '5050', role: 'partner', avatar: 'SO' },
+  ]
+};
+
+const ROLE_PERMISSIONS = {
+  admin: [
+    'dashboard','billing','crm','pipeline','followups',
+    'dayclose','ledger','commission','documents','reports',
+    'loyalty','campaigns','map','leads','predictive',
+    'audit','knowledge','staff','import','settings'
+  ],
+  staff: [
+    'billing','pipeline','followups','crm','dashboard'
+  ],
+  partner: [
+    'dashboard','ledger','reports'
+  ]
+};
+
+const MODULES = [
+  { id: 'dashboard', name: 'Dashboard', icon: '&#9783;' },
+  { id: 'billing', name: 'Billing', icon: '&#128930;' },
+  { id: 'crm', name: 'CRM', icon: '&#128101;' },
+  { id: 'pipeline', name: 'Pipeline', icon: '&#9776;' },
+  { id: 'followups', name: 'Follow-ups', icon: '&#128276;' },
+  { id: 'dayclose', name: 'Day Close', icon: '&#128274;' },
+  { id: 'ledger', name: 'Ledger', icon: '&#128214;' },
+  { id: 'commission', name: 'Commission', icon: '&#37;' },
+  { id: 'documents', name: 'Documents', icon: '&#128193;' },
+  { id: 'reports', name: 'Reports', icon: '&#128202;' },
+  { id: 'loyalty', name: 'Loyalty', icon: '&#9733;' },
+  { id: 'campaigns', name: 'Campaigns', icon: '&#128227;' },
+  { id: 'map', name: 'Area Map', icon: '&#128205;' },
+  { id: 'leads', name: 'Leads', icon: '&#128200;' },
+  { id: 'predictive', name: 'Predictive CRM', icon: '&#128161;' },
+  { id: 'audit', name: 'Audit Trail', icon: '&#128737;' },
+  { id: 'knowledge', name: 'Knowledge Base', icon: '&#128218;' },
+  { id: 'staff', name: 'Staff Panel', icon: '&#128100;' },
+  { id: 'import', name: 'Import / Export', icon: '&#8645;' },
+  { id: 'settings', name: 'Settings', icon: '&#9881;' }
+];
+
+// ── Apps Script API Client ───────────────────────────────────
+
+const API = {
+  url: localStorage.getItem('csc_api_url') || 'https://script.google.com/macros/s/AKfycbwyf9z5eicA-F6dUf1CgQiu6veQi1KqqDT6n1hGmto1xXjeI78jeJp8ztCyhIGBpaRK/exec', // Set from Settings module
+
+  async get(sheet) {
+    if (!this.url) { console.warn('API URL not set'); return null; }
+    try {
+      const res = await fetch(`${this.url}?action=read&sheet=${sheet}&t=${Date.now()}`);
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      return json.rows || [];
+    } catch (err) {
+      console.error(`API.get(${sheet}) failed:`, err);
+      setSyncStatus('error');
+      return null;
+    }
+  },
+
+  async append(sheet, data) {
+    if (!this.url) { SyncQueue.add('append', sheet, data); return null; }
+    try {
+      const res = await fetch(this.url, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'append', sheet, data }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      setSyncStatus('synced');
+      return json;
+    } catch (err) {
+      console.error(`API.append(${sheet}) failed:`, err);
+      SyncQueue.add('append', sheet, data);
+      setSyncStatus('pending');
+      return null;
+    }
+  },
+
+  async update(sheet, rowId, data) {
+    if (!this.url) { SyncQueue.add('update', sheet, data, rowId); return null; }
+    try {
+      const res = await fetch(this.url, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'update', sheet, rowId, data }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      setSyncStatus('synced');
+      return json;
+    } catch (err) {
+      console.error(`API.update(${sheet}) failed:`, err);
+      SyncQueue.add('update', sheet, data, rowId);
+      setSyncStatus('pending');
+      return null;
+    }
+  },
+
+  async delete(sheet, rowId) {
+    if (!this.url) { SyncQueue.add('delete', sheet, null, rowId); return null; }
+    try {
+      const res = await fetch(this.url, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'delete', sheet, rowId }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      setSyncStatus('synced');
+      return json;
+    } catch (err) {
+      console.error(`API.delete(${sheet}) failed:`, err);
+      SyncQueue.add('delete', sheet, null, rowId);
+      setSyncStatus('pending');
+      return null;
+    }
+  },
+
+  async ping() {
+    if (!this.url) return false;
+    try {
+      const res = await fetch(`${this.url}?action=ping&t=${Date.now()}`);
+      const json = await res.json();
+      return json.status === 'ok';
+    } catch { return false; }
+  }
+};
+
+function setSyncStatus(status) {
+  // status: 'synced' | 'pending' | 'offline' | 'error'
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  const labels = { synced: '● Synced', pending: '● Pending', offline: '● Offline', error: '● Error' };
+  const classes = { synced: 'sync-synced', pending: 'sync-pending', offline: 'sync-offline', error: 'sync-error' };
+  el.textContent = labels[status] || '● Unknown';
+  el.className = 'sync-pill ' + (classes[status] || '');
+}
+
+// ── Google Drive API Helper ──────────────────────────────────
+
+const DriveAPI = {
+  clientId: localStorage.getItem('csc_drive_client_id') || '128786960544-tbbup7meqbvcgrfrpjl6ghj7lqrav8ll.apps.googleusercontent.com',
+  accessToken: null,
+  tokenExpiry: null,
+
+  isReady() {
+    return !!(this.clientId && this.accessToken && Date.now() < this.tokenExpiry);
+  },
+
+  async authorize() {
+    if (!this.clientId) {
+      alert('Google Drive Client ID not configured. Go to Settings → Drive Client ID.');
+      return false;
+    }
+    const scope = 'https://www.googleapis.com/auth/drive.file';
+    const redirectUri = window.location.origin + window.location.pathname;
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(this.clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}`;
+    
+    const popup = window.open(authUrl, 'driveAuth', 'width=500,height=600');
+    return new Promise((resolve) => {
+      const interval = setInterval(() => {
+        try {
+          if (popup.closed) { clearInterval(interval); resolve(false); return; }
+          const hash = popup.location.hash;
+          if (hash && hash.includes('access_token')) {
+            const params = new URLSearchParams(hash.substring(1));
+            this.accessToken = params.get('access_token');
+            this.tokenExpiry = Date.now() + (parseInt(params.get('expires_in')) * 1000);
+            localStorage.setItem('csc_drive_token', this.accessToken);
+            localStorage.setItem('csc_drive_token_expiry', this.tokenExpiry);
+            popup.close();
+            clearInterval(interval);
+            resolve(true);
+          }
+        } catch (e) { /* Cross-origin, still loading */ }
+      }, 500);
+    });
+  },
+
+  async ensureAuth() {
+    const cached = localStorage.getItem('csc_drive_token');
+    const expiry = parseInt(localStorage.getItem('csc_drive_token_expiry') || '0');
+    if (cached && Date.now() < expiry) {
+      this.accessToken = cached;
+      this.tokenExpiry = expiry;
+      return true;
+    }
+    return await this.authorize();
+  },
+
+  async uploadFile(file, customerName, mobileLast4) {
+    const authed = await this.ensureAuth();
+    if (!authed) return null;
+
+    const rootFolderId = await this.getOrCreateFolder('Siraj CSC', 'root');
+    const customersFolderId = await this.getOrCreateFolder('Customers', rootFolderId);
+    const customerFolderName = `${customerName.replace(/\s+/g,'_')}_${mobileLast4}`;
+    const customerFolderId = await this.getOrCreateFolder(customerFolderName, customersFolderId);
+
+    const metadata = { name: file.name, parents: [customerFolderId] };
+    const formData = new FormData();
+    formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    formData.append('file', file);
+
+    const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,name', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${this.accessToken}` },
+      body: formData
+    });
+    const json = await res.json();
+    if (json.error) { console.error('Drive upload error:', json.error); return null; }
+    return { fileId: json.id, url: json.webViewLink, name: json.name };
+  },
+
+  async getOrCreateFolder(name, parentId) {
+    const query = `name='${name}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`;
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id)`, {
+      headers: { Authorization: `Bearer ${this.accessToken}` }
+    });
+    const json = await res.json();
+    if (json.files && json.files.length > 0) return json.files[0].id;
+
+    const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${this.accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] })
+    });
+    const created = await createRes.json();
+    return created.id;
+  }
+};
+
+function initDriveAPI() {
+  DriveAPI.clientId = localStorage.getItem('csc_drive_client_id') || '128786960544-tbbup7meqbvcgrfrpjl6ghj7lqrav8ll.apps.googleusercontent.com';
+  const cached = localStorage.getItem('csc_drive_token');
+  const expiry = parseInt(localStorage.getItem('csc_drive_token_expiry') || '0');
+  if (cached && Date.now() < expiry) {
+    DriveAPI.accessToken = cached;
+    DriveAPI.tokenExpiry = expiry;
+  }
+}
+
+// ── localStorage Cache Layer ─────────────────────────────────
+
+const Cache = {
+  set(sheetName, rows) {
+    const entry = { data: rows, cachedAt: Date.now(), ttl: 5 * 60 * 1000 };
+    try {
+      localStorage.setItem(`csc_cache_${sheetName}`, JSON.stringify(entry));
+    } catch (e) {
+      this.evictOldest();
+      localStorage.setItem(`csc_cache_${sheetName}`, JSON.stringify(entry));
+    }
+  },
+
+  get(sheetName) {
+    const raw = localStorage.getItem(`csc_cache_${sheetName}`);
+    if (!raw) return null;
+    const entry = JSON.parse(raw);
+    if (Date.now() - entry.cachedAt > entry.ttl) return null;
+    return entry.data;
+  },
+
+  getStale(sheetName) {
+    const raw = localStorage.getItem(`csc_cache_${sheetName}`);
+    if (!raw) return null;
+    return JSON.parse(raw).data;
+  },
+
+  addLocalRow(sheetName, rowData) {
+    const raw = localStorage.getItem(`csc_cache_${sheetName}`);
+    const entry = raw ? JSON.parse(raw) : { data: [], cachedAt: Date.now(), ttl: 5 * 60 * 1000 };
+    entry.data.push({ ...rowData, _local: true });
+    localStorage.setItem(`csc_cache_${sheetName}`, JSON.stringify(entry));
+  },
+
+  updateLocalRow(sheetName, rowId, updates) {
+    const raw = localStorage.getItem(`csc_cache_${sheetName}`);
+    if (!raw) return;
+    const entry = JSON.parse(raw);
+    entry.data = entry.data.map(row => String(row.id) === String(rowId) ? { ...row, ...updates } : row);
+    localStorage.setItem(`csc_cache_${sheetName}`, JSON.stringify(entry));
+  },
+
+  deleteLocalRow(sheetName, rowId) {
+    const raw = localStorage.getItem(`csc_cache_${sheetName}`);
+    if (!raw) return;
+    const entry = JSON.parse(raw);
+    entry.data = entry.data.filter(row => String(row.id) !== String(rowId));
+    localStorage.setItem(`csc_cache_${sheetName}`, JSON.stringify(entry));
+  },
+
+  invalidate(sheetName) {
+    localStorage.removeItem(`csc_cache_${sheetName}`);
+  },
+
+  evictOldest() {
+    let oldest = null;
+    let oldestTime = Infinity;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key.startsWith('csc_cache_')) continue;
+      try {
+        const entry = JSON.parse(localStorage.getItem(key));
+        if (entry.cachedAt < oldestTime) {
+          oldestTime = entry.cachedAt;
+          oldest = key;
+        }
+      } catch {}
+    }
+    if (oldest) localStorage.removeItem(oldest);
+  }
+};
+
+async function getData(sheetName) {
+  const cached = Cache.get(sheetName);
+  if (cached) return cached;
+  if (navigator.onLine && API.url) {
+    const rows = await API.get(sheetName);
+    if (rows) { Cache.set(sheetName, rows); return rows; }
+  }
+  const stale = Cache.getStale(sheetName);
+  if (stale) { setSyncStatus('offline'); return stale; }
+  return [];
+}
+
+async function saveData(sheetName, rowData) {
+  if (!rowData.id) {
+    rowData.id = `${sheetName.toLowerCase()}_${Date.now()}_${Math.random().toString(36).substr(2,6)}`;
+  }
+  Cache.addLocalRow(sheetName, rowData);
+  if (navigator.onLine && API.url) {
+    const result = await API.append(sheetName, rowData);
+    if (result && result.success) {
+      Cache.updateLocalRow(sheetName, rowData.id, { _local: false });
+      setSyncStatus('synced');
+      return rowData;
+    }
+  }
+  SyncQueue.add('append', sheetName, rowData);
+  setSyncStatus('pending');
+  return rowData;
+}
+
+async function updateDataRow(sheetName, rowId, updates) {
+  Cache.updateLocalRow(sheetName, rowId, updates);
+  if (navigator.onLine && API.url) {
+    const result = await API.update(sheetName, rowId, updates);
+    if (result && result.success) { setSyncStatus('synced'); return; }
+  }
+  SyncQueue.add('update', sheetName, updates, rowId);
+  setSyncStatus('pending');
+}
+
+// ── Sync Queue ───────────────────────────────────────────────
+
+const SyncQueue = {
+  STORAGE_KEY: 'csc_sync_queue',
+
+  getAll() {
+    return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
+  },
+
+  add(action, sheet, data, rowId = null) {
+    const queue = this.getAll();
+    queue.push({
+      id: `sq_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
+      action, sheet, data, rowId,
+      addedAt: Date.now(), attempts: 0, lastError: null
+    });
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(queue));
+    updateSyncBadge(queue.length);
+  },
+
+  remove(itemId) {
+    const queue = this.getAll().filter(item => item.id !== itemId);
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(queue));
+    updateSyncBadge(queue.length);
+  },
+
+  updateItem(itemId, updates) {
+    const queue = this.getAll().map(item => item.id === itemId ? { ...item, ...updates } : item);
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(queue));
+  },
+
+  count() { return this.getAll().length; }
+};
+
+function updateSyncBadge(count) {
+  if (count === 0) {
+    setSyncStatus('synced');
+  } else {
+    const el = document.getElementById('sync-status');
+    if (el) el.textContent = `● ${count} Pending`;
+    setSyncStatus('pending');
+  }
+}
+
+// ── Background Sync Engine ───────────────────────────────────
+
+let syncIntervalId = null;
+let isSyncing = false;
+
+function startSyncEngine() {
+  processSyncQueue();
+  syncIntervalId = setInterval(() => { if (navigator.onLine) processSyncQueue(); }, 30 * 1000);
+}
+
+async function processSyncQueue() {
+  if (isSyncing || !navigator.onLine || !API.url) return;
+  const queue = SyncQueue.getAll();
+  if (queue.length === 0) { setSyncStatus('synced'); return; }
+
+  isSyncing = true;
+  setSyncStatus('pending');
+  let successCount = 0;
+
+  for (const item of queue) {
+    try {
+      let result = null;
+      if (item.action === 'append') result = await API.append(item.sheet, item.data);
+      else if (item.action === 'update') result = await API.update(item.sheet, item.rowId, item.data);
+      else if (item.action === 'delete') result = await API.delete(item.sheet, item.rowId);
+
+      if (result && result.success) {
+        SyncQueue.remove(item.id);
+        if (item.action === 'append' && item.data && item.data.id) {
+          Cache.updateLocalRow(item.sheet, item.data.id, { _local: false });
+        }
+        successCount++;
+      } else {
+        SyncQueue.updateItem(item.id, {
+          attempts: item.attempts + 1,
+          lastError: result ? result.error : 'Unknown error'
+        });
+        if (item.attempts >= 10) SyncQueue.updateItem(item.id, { failed: true });
+      }
+    } catch (err) {
+      SyncQueue.updateItem(item.id, { attempts: item.attempts + 1, lastError: err.message });
+    }
+  }
+
+  isSyncing = false;
+  if (SyncQueue.count() === 0) setSyncStatus('synced');
+  else setSyncStatus('pending');
+
+  if (successCount > 0) detectConflicts();
+}
+
+window.addEventListener('online', () => {
+  setSyncStatus('pending');
+  processSyncQueue();
+});
+window.addEventListener('offline', () => setSyncStatus('offline'));
+
+function initConnectivityStatus() {
+  setSyncStatus(navigator.onLine ? 'synced' : 'offline');
+}
+
+// ── Conflict Detection ───────────────────────────────────────
+
+const CONFLICT_WINDOW_MS = 5 * 60 * 1000;
+const CONFLICTS_KEY = 'csc_conflicts';
+
+async function detectConflicts() {
+  const transactions = await getData('Transactions');
+  const conflicts = [];
+  const seen = new Map();
+  const sorted = [...transactions].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+  for (const tx of sorted) {
+    let services = [];
+    try { services = JSON.parse(tx.services || '[]'); } catch {}
+    const serviceTypes = services.map(s => s.serviceType).join(',');
+    const key = `${tx.customerId}|${serviceTypes}`;
+    const ts = new Date(tx.timestamp).getTime();
+
+    if (seen.has(key)) {
+      const prev = seen.get(key);
+      if (ts - prev.timestamp <= CONFLICT_WINDOW_MS) {
+        conflicts.push({
+          id: `conflict_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
+          bill1Id: prev.billId,
+          bill2Id: tx.billId || tx.id,
+          customerId: tx.customerId,
+          customerName: tx.customerName,
+          services: serviceTypes,
+          bill1Time: new Date(prev.timestamp).toISOString(),
+          bill2Time: tx.timestamp,
+          resolvedBy: null,
+          resolution: null,
+          detectedAt: new Date().toISOString()
+        });
+      }
+    }
+    seen.set(key, { timestamp: ts, billId: tx.billId || tx.id });
+  }
+
+  localStorage.setItem(CONFLICTS_KEY, JSON.stringify(conflicts));
+  updateConflictBadge(conflicts.filter(c => !c.resolvedBy).length);
+}
+
+function getUnresolvedConflicts() {
+  const all = JSON.parse(localStorage.getItem(CONFLICTS_KEY) || '[]');
+  return all.filter(c => !c.resolvedBy);
+}
+
+function resolveConflict(conflictId, resolution, resolvedBy) {
+  const all = JSON.parse(localStorage.getItem(CONFLICTS_KEY) || '[]');
+  const updated = all.map(c => {
+    if (c.id === conflictId) return { ...c, resolvedBy, resolution, resolvedAt: new Date().toISOString() };
+    return c;
+  });
+  localStorage.setItem(CONFLICTS_KEY, JSON.stringify(updated));
+
+  if (resolution === 'keep_second') {
+    const conflict = updated.find(c => c.id === conflictId);
+    if (conflict) updateDataRow('Transactions', conflict.bill1Id, { syncStatus: 'cancelled_duplicate' });
+  } else if (resolution === 'keep_first') {
+    const conflict = updated.find(c => c.id === conflictId);
+    if (conflict) updateDataRow('Transactions', conflict.bill2Id, { syncStatus: 'cancelled_duplicate' });
+  }
+
+  updateConflictBadge(getUnresolvedConflicts().length);
+
+  saveData('AuditLog', {
+    id: `audit_${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: JSON.parse(sessionStorage.getItem('csc_current_user') || '{}').id || 'unknown',
+    userName: JSON.parse(sessionStorage.getItem('csc_current_user') || '{}').name || 'Unknown',
+    module: 'ConflictResolution',
+    action: 'resolve_conflict',
+    recordId: conflictId,
+    details: `Resolution: ${resolution}`
+  });
+}
+
+function updateConflictBadge(count) {
+  const badge = document.getElementById('conflict-badge');
+  if (badge) {
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
+  const dashBadge = document.getElementById('sidebar-dashboard-badge');
+  if (dashBadge) {
+    dashBadge.textContent = count;
+    dashBadge.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
+}
+
+// ── INIT NAVIGATION ──
+function renderSidebar() {
+  const navList = document.getElementById('nav-list');
+  navList.innerHTML = MODULES.map(m => `
+    <li id="nav-item-${m.id}" data-target="module-${m.id}" onclick="navigateTo('module-${m.id}')">
+      <a><span class="nav-icon">${m.icon}</span> ${m.name}</a>
+    </li>
+  `).join('');
+}
+
+function navigateTo(moduleId) {
+  // Hide all panels
+  document.querySelectorAll('.module-panel').forEach(p => p.classList.remove('active'));
+  
+  // Show target panel
+  const target = document.getElementById(moduleId);
+  if (target) {
+    target.classList.add('active');
+    document.getElementById('topbar-module-title').textContent = target.getAttribute('data-title');
+  }
+
+  // Update sidebar active state
+  document.querySelectorAll('#nav-list li').forEach(li => li.classList.remove('nav-active'));
+  const activeNav = document.querySelector(`[data-target="${moduleId}"]`);
+  if (activeNav) activeNav.classList.add('nav-active');
+
+  // Save to localStorage
+  localStorage.setItem('activeModule', moduleId);
+  
+  if (window.innerWidth <= 768) {
+      document.getElementById('sidebar').classList.remove('open');
+  }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ── PIN AUTH LOGIC ──
+let currentPin = '';
+
+function pinInput(digit) {
+  if (currentPin.length >= 4) return;
+  currentPin += digit;
+  updatePinDots();
+  if (currentPin.length === 4) {
+    setTimeout(attemptLogin, 200);
+  }
+}
+
+function pinBackspace() {
+  currentPin = currentPin.slice(0, -1);
+  updatePinDots();
+  document.getElementById('login-error').textContent = '';
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`dot-${i}`).classList.toggle('filled', i < currentPin.length);
+  }
+}
+
+function attemptLogin() {
+  const users = JSON.parse(localStorage.getItem('csc_users_config') || 'null') || APP_CONFIG.users;
+  const user = users.find(u => u.pin === currentPin);
+  if (user) {
+    sessionStorage.setItem('csc_current_user', JSON.stringify(user));
+    loginSuccess(user);
+  } else {
+    showLoginError('Wrong PIN. Try again.');
+    currentPin = '';
+    updatePinDots();
+  }
+}
+
+function showLoginError(msg) {
+  const err = document.getElementById('login-error');
+  err.textContent = msg;
+  err.classList.add('shake');
+  setTimeout(() => err.classList.remove('shake'), 500);
+}
+
+function loginSuccess(user) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-app').classList.add('visible');
+  applyRoleAccess(user);
+  initApp(user);
+  updateTopBar(user);
+}
+
+function logout() {
+  sessionStorage.removeItem('csc_current_user');
+  document.getElementById('main-app').classList.remove('visible');
+  document.getElementById('login-screen').style.display = 'flex';
+  currentPin = '';
+  updatePinDots();
+}
+
+// Handle keyboard input for PIN
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('login-screen').style.display !== 'none') {
+    if (e.key >= '0' && e.key <= '9') {
+      pinInput(e.key);
+    } else if (e.key === 'Backspace') {
+      pinBackspace();
+    } else if (e.key === 'Enter' && currentPin.length === 4) {
+      attemptLogin();
+    }
+  }
+});
+
+// ── ROLE & UI LOGIC ──
+function applyRoleAccess(user) {
+  const allowed = ROLE_PERMISSIONS[user.role] || [];
+  
+  document.querySelectorAll('#sidebar nav li').forEach(li => {
+    const target = li.getAttribute('data-target');
+    const moduleKey = target.replace('module-', '');
+    li.style.display = allowed.includes(moduleKey) ? '' : 'none';
+  });
+
+  const lastActive = localStorage.getItem('activeModule');
+  if (lastActive && allowed.includes(lastActive.replace('module-', ''))) {
+    navigateTo(lastActive);
+  } else {
+    const firstAllowed = 'module-' + allowed[0];
+    navigateTo(firstAllowed);
+  }
+}
+
+function updateTopBar(user) {
+  document.getElementById('topbar-user-name').textContent = user.name;
+  document.getElementById('topbar-user-role').textContent = user.role.toUpperCase();
+  document.getElementById('topbar-avatar').textContent = user.avatar;
+  
+  document.getElementById('sidebar-user-name').textContent = user.name;
+  document.getElementById('sidebar-user-role').textContent = user.role.toUpperCase();
+  document.getElementById('sidebar-avatar').textContent = user.avatar;
+  
+  const roleColors = { admin: 'var(--c-primary)', staff: 'var(--c-success)', partner: 'var(--c-accent)' };
+  document.getElementById('topbar-user-role').style.color = roleColors[user.role];
+  document.getElementById('sidebar-user-role').style.color = roleColors[user.role];
+}
+
+function startClock() {
+  function tick() {
+    const now = new Date();
+    document.getElementById('topbar-clock').textContent = 
+      now.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) + ' · ' +
+      now.toLocaleDateString('en-IN', {day:'2-digit', month:'short'});
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+// ── CRM MODULE LOGIC ──
+let crmCustomers = [];
+let crmFamilies = [];
+
+async function initCRM() {
+  crmCustomers = await getData('Customers');
+  crmFamilies = await getData('Families');
+  renderCRMList(crmCustomers);
+}
+
+function renderCRMList(customers) {
+  const list = document.getElementById('crm-customer-list');
+  if (!list) return;
+  if (customers.length === 0) {
+    list.innerHTML = `<div class="text-muted text-sm" style="padding: 20px; text-align: center;">No customers found.</div>`;
+    return;
+  }
+  list.innerHTML = customers.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).map(c => `
+    <li class="crm-list-item" onclick="showCustomerProfile('${c.id}')" id="crm-item-${c.id}">
+      <div class="crm-list-item-name">${c.name}</div>
+      <div class="crm-list-item-sub">
+        <span>&#128222; ${c.mobile}</span>
+        ${c.aadhaarLast4 ? `<span style="margin-left: 8px;">&#128179; *${c.aadhaarLast4}</span>` : ''}
+      </div>
+    </li>
+  `).join('');
+}
+
+function searchCRM(query) {
+  const q = query.toLowerCase();
+  const filtered = crmCustomers.filter(c => 
+    (c.name && c.name.toLowerCase().includes(q)) || 
+    (c.mobile && c.mobile.includes(q))
+  );
+  renderCRMList(filtered);
+}
+
+function showCustomerProfile(id) {
+  document.querySelectorAll('.crm-list-item').forEach(el => el.classList.remove('active'));
+  const activeItem = document.getElementById(`crm-item-${id}`);
+  if (activeItem) activeItem.classList.add('active');
+
+  const customer = crmCustomers.find(c => c.id === id);
+  if (!customer) return;
+
+  document.getElementById('crm-empty-state').classList.add('hidden');
+  const content = document.getElementById('crm-profile-content');
+  content.classList.remove('hidden');
+
+  let familyHtml = '<div class="text-muted text-sm mb-md">No family linked.</div>';
+  if (customer.familyId) {
+    const family = crmFamilies.find(f => f.id === customer.familyId);
+    if (family) {
+      let members = [];
+      try { members = JSON.parse(family.memberIds || '[]'); } catch {}
+      const memberDetails = members.map(m => {
+        const c = crmCustomers.find(cx => cx.id === m.id);
+        return c ? `<div class="family-member-card" style="cursor: pointer;" onclick="showCustomerProfile('${c.id}')">
+          <div><span class="font-semibold text-sm" style="color: var(--text-primary);">${c.name}</span> <span class="text-xs text-muted" style="margin-left: 8px;">${c.mobile}</span></div>
+          <div class="family-tag">${m.relation}</div>
+        </div>` : '';
+      }).join('');
+      familyHtml = `<div class="mb-md">${memberDetails}</div>`;
+    }
+  }
+
+  content.innerHTML = `
+    <div class="crm-profile-header">
+      <div>
+        <h2 class="crm-profile-name">${customer.name}</h2>
+        <div class="crm-profile-meta">
+          <span>&#128222; ${customer.mobile}</span>
+          ${customer.aadhaarLast4 ? `<span>&#128179; Aadhaar: *${customer.aadhaarLast4}</span>` : ''}
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="editCustomer('${id}')">Edit</button>
+    </div>
+    
+    <div class="grid-2">
+      <div>
+        <div class="crm-section-title">Details</div>
+        <table class="data-table" style="background: transparent;">
+          <tr><td>Locality</td><td class="font-semibold" style="color: var(--text-primary);">${customer.locality || '-'}</td></tr>
+          <tr><td>DOB</td><td class="font-semibold" style="color: var(--text-primary);">${customer.dob || '-'}</td></tr>
+          <tr><td>Tags</td><td class="font-semibold" style="color: var(--text-primary);">${customer.tags || '-'}</td></tr>
+        </table>
+      </div>
+      <div>
+        <div class="crm-section-title" style="display: flex; align-items: center;">Family Members <button class="btn btn-icon btn-sm" style="margin-left: 8px; background: rgba(255,255,255,0.05);" onclick="promptAddFamilyMember('${id}')" title="Add Family Member">+</button></div>
+        ${familyHtml}
+      </div>
+    </div>
+  `;
+}
+
+function showCustomerForm(customer = null, prefillMobile = '', linkToFamilyId = null) {
+  const isEdit = !!customer;
+  const id = isEdit ? customer.id : '';
+  const name = isEdit ? customer.name : '';
+  const mobile = isEdit ? customer.mobile : prefillMobile;
+  const aadhaar = isEdit ? (customer.aadhaarLast4 || '') : '';
+  const locality = isEdit ? (customer.locality || '') : '';
+  const relOptions = ['Self','Wife','Husband','Son','Daughter','Father','Mother','Brother','Sister','Other'];
+  
+  let relationSelect = '';
+  if (!isEdit && linkToFamilyId) {
+    relationSelect = `
+      <div class="form-group mb-sm">
+        <label class="form-label">Relation to Head</label>
+        <select id="crm-form-relation" class="select">
+          ${relOptions.map(r => `<option value="${r}">${r}</option>`).join('')}
+        </select>
+      </div>
+    `;
+  }
+
+  const formHtml = `
+    <div class="crm-profile-header">
+      <h2 class="crm-profile-name">${isEdit ? 'Edit Customer' : 'New Customer'}</h2>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input type="text" id="crm-form-name" class="input" value="${name}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mobile Number *</label>
+        <input type="text" id="crm-form-mobile" class="input" value="${mobile}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Aadhaar (Last 4)</label>
+        <input type="text" id="crm-form-aadhaar" class="input" value="${aadhaar}" maxlength="4">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Locality / Area</label>
+        <input type="text" id="crm-form-locality" class="input" value="${locality}">
+      </div>
+      ${relationSelect}
+    </div>
+    <div class="mt-lg flex gap-sm">
+      <button class="btn btn-primary" onclick="submitCustomerForm('${id}', '${linkToFamilyId || ''}')">Save Customer</button>
+      <button class="btn btn-secondary" onclick="cancelCustomerForm()">Cancel</button>
+    </div>
+  `;
+  document.getElementById('crm-empty-state').classList.add('hidden');
+  const content = document.getElementById('crm-profile-content');
+  content.classList.remove('hidden');
+  content.innerHTML = formHtml;
+  setTimeout(() => document.getElementById('crm-form-name').focus(), 50);
+}
+
+function cancelCustomerForm() {
+  document.getElementById('crm-profile-content').innerHTML = '';
+  document.getElementById('crm-profile-content').classList.add('hidden');
+  document.getElementById('crm-empty-state').classList.remove('hidden');
+}
+
+async function submitCustomerForm(id, linkToFamilyId) {
+  const name = document.getElementById('crm-form-name').value.trim();
+  const mobile = document.getElementById('crm-form-mobile').value.trim();
+  const aadhaar = document.getElementById('crm-form-aadhaar').value.trim();
+  const locality = document.getElementById('crm-form-locality').value.trim();
+  let relation = 'Other';
+  const relEl = document.getElementById('crm-form-relation');
+  if (relEl) relation = relEl.value;
+
+  if (!name || !mobile) return alert("Name and Mobile are required.");
+
+  let isNew = !id;
+  let data = isNew ? {
+    createdAt: new Date().toISOString(),
+    createdBy: JSON.parse(sessionStorage.getItem('csc_current_user') || '{}').id
+  } : crmCustomers.find(c => c.id === id);
+
+  data = { ...data, name, mobile, aadhaarLast4: aadhaar, locality };
+
+  if (isNew && !linkToFamilyId) {
+    const existing = crmCustomers.find(c => c.mobile === mobile);
+    if (existing) {
+      if (confirm(`Mobile number ${mobile} is already registered with ${existing.name}. Do you want to link this new customer as a family member?`)) {
+        let familyId = existing.familyId;
+        if (!familyId) {
+          familyId = `fam_${Date.now()}`;
+          const newFamily = { id: familyId, headCustomerId: existing.id, headName: existing.name, headMobile: existing.mobile, memberIds: JSON.stringify([{id: existing.id, relation: 'Head'}]), createdAt: new Date().toISOString() };
+          await saveData('Families', newFamily);
+          await updateDataRow('Customers', existing.id, { familyId });
+          crmFamilies.push(newFamily);
+        }
+        data.familyId = familyId;
+        const saved = await saveData('Customers', data);
+        crmCustomers.push(saved);
+        
+        const family = crmFamilies.find(f => f.id === familyId);
+        let members = JSON.parse(family.memberIds || '[]');
+        members.push({ id: saved.id, relation: 'Family' }); 
+        family.memberIds = JSON.stringify(members);
+        await updateDataRow('Families', familyId, { memberIds: family.memberIds });
+        
+        initCRM();
+        showCustomerProfile(saved.id);
+        return;
+      }
+    }
+  }
+
+  if (linkToFamilyId) data.familyId = linkToFamilyId;
+  
+  if (isNew) {
+    const saved = await saveData('Customers', data);
+    crmCustomers.push(saved);
+    if (linkToFamilyId) {
+      const family = crmFamilies.find(f => f.id === linkToFamilyId);
+      if (family) {
+        let members = JSON.parse(family.memberIds || '[]');
+        members.push({ id: saved.id, relation });
+        family.memberIds = JSON.stringify(members);
+        await updateDataRow('Families', linkToFamilyId, { memberIds: family.memberIds });
+      }
+    }
+    showCustomerProfile(saved.id);
+  } else {
+    await updateDataRow('Customers', id, { name, mobile, aadhaarLast4: aadhaar, locality });
+    const idx = crmCustomers.findIndex(c => c.id === id);
+    if (idx > -1) crmCustomers[idx] = { ...crmCustomers[idx], name, mobile, aadhaarLast4: aadhaar, locality };
+    showCustomerProfile(id);
+  }
+  
+  renderCRMList(crmCustomers);
+}
+
+function editCustomer(id) {
+  const c = crmCustomers.find(x => x.id === id);
+  if (c) showCustomerForm(c);
+}
+
+function promptAddFamilyMember(headCustomerId) {
+  const head = crmCustomers.find(c => c.id === headCustomerId);
+  if (!head) return;
+  
+  let familyId = head.familyId;
+  if (!familyId) {
+    familyId = `fam_${Date.now()}`;
+    const newFamily = { id: familyId, headCustomerId: head.id, headName: head.name, headMobile: head.mobile, memberIds: JSON.stringify([{id: head.id, relation: 'Head'}]), createdAt: new Date().toISOString() };
+    saveData('Families', newFamily).then(() => {
+      updateDataRow('Customers', head.id, { familyId });
+      crmFamilies.push(newFamily);
+      head.familyId = familyId;
+      showCustomerForm(null, head.mobile, familyId);
+    });
+  } else {
+    showCustomerForm(null, head.mobile, familyId);
+  }
+}
+
+// ── BILLING MODULE LOGIC ──
+const SERVICE_CATALOG = [
+  { id: 's1', name: 'Aadhaar Mobile Update', defaultPrice: 100 },
+  { id: 's2', name: 'Aadhaar New Enrollment', defaultPrice: 50 },
+  { id: 's3', name: 'Aadhaar Address Update', defaultPrice: 100 },
+  { id: 's4', name: 'Aadhaar Print/Download', defaultPrice: 50 },
+  { id: 's5', name: 'PAN New (NSDL/UTIITSL)', defaultPrice: 150 },
+  { id: 's6', name: 'PAN Correction', defaultPrice: 200 },
+  { id: 's7', name: 'PAN Reprint', defaultPrice: 100 },
+  { id: 's8', name: 'Voter ID New', defaultPrice: 100 },
+  { id: 's9', name: 'Voter ID Correction', defaultPrice: 100 },
+  { id: 's10', name: 'Voter ID Reprint/PVC', defaultPrice: 100 },
+  { id: 's11', name: 'Passport Fresh', defaultPrice: 1500 },
+  { id: 's12', name: 'Passport Renewal', defaultPrice: 1500 },
+  { id: 's13', name: 'Ration Card New', defaultPrice: 200 },
+  { id: 's14', name: 'Ration Card Modification', defaultPrice: 150 },
+  { id: 's15', name: 'Driving License Learner', defaultPrice: 500 },
+  { id: 's16', name: 'Driving License Permanent', defaultPrice: 800 },
+  { id: 's17', name: 'DL Renewal/Correction', defaultPrice: 500 },
+  { id: 's18', name: 'Income Certificate', defaultPrice: 150 },
+  { id: 's19', name: 'Caste Certificate', defaultPrice: 150 },
+  { id: 's20', name: 'Domicile/Residence Cert', defaultPrice: 150 },
+  { id: 's21', name: 'Labour Card New', defaultPrice: 150 },
+  { id: 's22', name: 'Labour Card Renewal', defaultPrice: 100 },
+  { id: 's23', name: 'Ayushman Bharat Card', defaultPrice: 50 },
+  { id: 's24', name: 'E-Shram Card', defaultPrice: 50 },
+  { id: 's25', name: 'PM Kisan Samman Nidhi', defaultPrice: 100 },
+  { id: 's26', name: 'Police Clearance Cert', defaultPrice: 500 },
+  { id: 's27', name: 'MSME / Udyam Reg', defaultPrice: 200 },
+  { id: 's28', name: 'FSSAI License Basic', defaultPrice: 500 },
+  { id: 's29', name: 'PF Withdrawal', defaultPrice: 300 },
+  { id: 's30', name: 'ITR Filing (Basic)', defaultPrice: 500 },
+  { id: 's31', name: 'Train Ticket (IRCTC)', defaultPrice: 50 },
+  { id: 's32', name: 'Flight Ticket', defaultPrice: 200 }
+];
+
+let billingState = {
+  customer: null,
+  cart: [],
+  paymentMode: 'Cash'
+};
+
+function initBilling() {
+  renderServiceCatalog();
+}
+
+function handleBillingCustomerSearch(query) {
+  const dropdown = document.getElementById('billing-customer-dropdown');
+  if (!query || query.length < 2) {
+    dropdown.classList.add('hidden');
+    return;
+  }
+  const q = query.toLowerCase();
+  const filtered = crmCustomers.filter(c => 
+    (c.name && c.name.toLowerCase().includes(q)) || 
+    (c.mobile && c.mobile.includes(q))
+  ).slice(0, 5); 
+  
+  if (filtered.length === 0) {
+    dropdown.innerHTML = `<div class="p-sm text-sm text-muted text-center" style="padding: 10px;">No matches found.</div>`;
+  } else {
+    dropdown.innerHTML = filtered.map(c => `
+      <div class="dropdown-item" onclick="selectBillingCustomer('${c.id}')">
+        <div class="font-semibold text-sm">${c.name}</div>
+        <div class="text-xs text-muted">${c.mobile} ${c.aadhaarLast4 ? `· *${c.aadhaarLast4}` : ''}</div>
+      </div>
+    `).join('');
+  }
+  dropdown.classList.remove('hidden');
+}
+
+function selectBillingCustomer(id) {
+  const customer = crmCustomers.find(c => c.id === id);
+  if (!customer) return;
+  billingState.customer = customer;
+  document.getElementById('billing-customer-search').value = '';
+  document.getElementById('billing-customer-dropdown').classList.add('hidden');
+  document.getElementById('billing-customer-search').parentElement.classList.add('hidden');
+  
+  const selectedDiv = document.getElementById('billing-selected-customer');
+  selectedDiv.classList.remove('hidden');
+  document.getElementById('billing-cust-name').textContent = customer.name;
+  document.getElementById('billing-cust-mobile').textContent = customer.mobile;
+}
+
+function clearBillingCustomer() {
+  billingState.customer = null;
+  document.getElementById('billing-selected-customer').classList.add('hidden');
+  document.getElementById('billing-customer-search').parentElement.classList.remove('hidden');
+  document.getElementById('billing-customer-search').focus();
+}
+
+function switchToCRMAndNewCustomer() {
+  navigateTo('module-crm');
+  showCustomerForm();
+}
+
+function renderServiceCatalog(query = '') {
+  const q = query.toLowerCase();
+  const services = SERVICE_CATALOG.filter(s => s.name.toLowerCase().includes(q));
+  const container = document.getElementById('billing-service-catalog');
+  
+  container.innerHTML = services.map(s => `
+    <div class="service-card" onclick="addToBill('${s.id}')">
+      <div class="service-card-title">${s.name}</div>
+      <div class="service-card-price">₹${s.defaultPrice}</div>
+    </div>
+  `).join('');
+}
+
+function addToBill(serviceId) {
+  const service = SERVICE_CATALOG.find(s => s.id === serviceId);
+  if (!service) return;
+  
+  billingState.cart.push({
+    id: `item_${Date.now()}_${Math.random().toString(36).substr(2,4)}`,
+    serviceId: service.id,
+    serviceType: service.name,
+    price: service.defaultPrice
+  });
+  
+  renderCart();
+}
+
+function removeFromBill(itemId) {
+  billingState.cart = billingState.cart.filter(item => item.id !== itemId);
+  renderCart();
+}
+
+function updateLinePrice(itemId, newPrice) {
+  const val = parseFloat(newPrice);
+  if (isNaN(val)) return;
+  const item = billingState.cart.find(i => i.id === itemId);
+  if (item) {
+    item.price = val;
+    calculateTotal();
+  }
+}
+
+function renderCart() {
+  const container = document.getElementById('billing-cart-items');
+  if (billingState.cart.length === 0) {
+    container.innerHTML = `<div class="text-center text-muted text-sm mt-lg">Cart is empty. Add services from the left.</div>`;
+    calculateTotal();
+    return;
+  }
+  
+  container.innerHTML = billingState.cart.map(item => `
+    <div class="cart-item">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.serviceType}</div>
+      </div>
+      <div class="flex items-center gap-sm">
+        <span class="text-muted text-sm">₹</span>
+        <input type="number" class="cart-item-price-input" value="${item.price}" onchange="updateLinePrice('${item.id}', this.value)" onkeyup="updateLinePrice('${item.id}', this.value)">
+        <button class="btn-icon btn-sm ml-sm" onclick="removeFromBill('${item.id}')" style="color: var(--text-muted);">&#10005;</button>
+      </div>
+    </div>
+  `).join('');
+  
+  calculateTotal();
+}
+
+function calculateTotal() {
+  const total = billingState.cart.reduce((sum, item) => sum + item.price, 0);
+  document.getElementById('billing-total-amount').textContent = `₹${total}`;
+  return total;
+}
+
+function setPaymentMode(mode, btnElement) {
+  billingState.paymentMode = mode;
+  document.querySelectorAll('.payment-mode-btn').forEach(b => b.classList.remove('active'));
+  btnElement.classList.add('active');
+}
+
+// ── RECEIPT & SAVE LOGIC ──
+function previewBill() {
+  if (!billingState.customer) return alert('Please select a customer first.');
+  if (billingState.cart.length === 0) return alert('Cart is empty.');
+  
+  const billId = `BILL_${Date.now().toString().slice(-6)}`;
+  const total = calculateTotal();
+  const tx = {
+    billId,
+    customerName: billingState.customer.name,
+    customerMobile: billingState.customer.mobile,
+    timestamp: new Date().toISOString(),
+    cart: billingState.cart,
+    total,
+    paymentMode: billingState.paymentMode,
+    user: JSON.parse(sessionStorage.getItem('csc_current_user') || '{}').name || 'Admin'
+  };
+  
+  injectReceiptHTML(tx);
+  alert(`Preview generated for ${billId}. Click Save & Print to complete.`);
+}
+
+async function saveBill() {
+  if (!billingState.customer) return alert('Please select a customer first.');
+  if (billingState.cart.length === 0) return alert('Cart is empty.');
+  
+  const currentUser = JSON.parse(sessionStorage.getItem('csc_current_user') || '{}');
+  const billId = `BILL_${Date.now().toString().slice(-6)}`;
+  const total = calculateTotal();
+  
+  const transaction = {
+    id: `tx_${Date.now()}`,
+    billId,
+    customerId: billingState.customer.id,
+    customerName: billingState.customer.name,
+    customerMobile: billingState.customer.mobile,
+    services: JSON.stringify(billingState.cart),
+    totalAmount: total,
+    paymentMode: billingState.paymentMode,
+    timestamp: new Date().toISOString(),
+    userId: currentUser.id,
+    userName: currentUser.name
+  };
+
+  await saveData('Transactions', transaction);
+  
+  await saveData('AuditLog', {
+    id: `audit_${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: currentUser.id,
+    userName: currentUser.name,
+    module: 'Billing',
+    action: 'create_bill',
+    recordId: transaction.billId,
+    details: `Total: ₹${total}, Mode: ${transaction.paymentMode}`
+  });
+
+  injectReceiptHTML({
+    ...transaction,
+    cart: billingState.cart,
+    total: total,
+    user: currentUser.name
+  });
+  window.print();
+
+  sendWhatsAppReceipt(transaction, billingState.cart);
+
+  billingState.cart = [];
+  clearBillingCustomer();
+  renderCart();
+  alert('Bill saved successfully!');
+}
+
+function injectReceiptHTML(tx) {
+  const area = document.getElementById('receipt-print-area');
+  const d = new Date(tx.timestamp);
+  const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  
+  const rows = tx.cart.map(item => `
+    <tr>
+      <td>${item.serviceType}</td>
+      <td class="right">${item.price}</td>
+    </tr>
+  `).join('');
+
+  area.innerHTML = `
+    <div class="receipt-header">
+      <div class="receipt-title">SIRAJ CSC</div>
+      <div class="receipt-sub">Kalaburagi, Karnataka</div>
+    </div>
+    <div class="receipt-details">
+      Bill: ${tx.billId}<br>
+      Date: ${dateStr}<br>
+      Cust: ${tx.customerName}<br>
+      Mob: ${tx.customerMobile}<br>
+      Staff: ${tx.user}
+    </div>
+    <table class="receipt-table">
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th class="right">Amt (Rs)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+    <div class="receipt-total">
+      Total: Rs ${tx.total}<br>
+      Mode: ${tx.paymentMode}
+    </div>
+    <div class="receipt-footer">
+      Thank you for visiting!<br>
+      Powered by GSD
+    </div>
+  `;
+}
+
+function sendWhatsAppReceipt(tx, cart) {
+  const servicesList = cart.map(item => `- ${item.serviceType}: Rs ${item.price}`).join('%0A');
+  const text = `*SIRAJ CSC - Payment Receipt*%0A%0AHello ${tx.customerName},%0A%0ABill No: ${tx.billId}%0ADate: ${new Date(tx.timestamp).toLocaleDateString()}%0A%0A*Services:*%0A${servicesList}%0A%0A*Total Amount: Rs ${tx.totalAmount}*%0APayment Mode: ${tx.paymentMode}%0A%0AThank you for visiting Siraj CSC!`;
+  
+  let mobile = tx.customerMobile;
+  if (!mobile.startsWith('91') && mobile.length === 10) mobile = '91' + mobile;
+  
+  const url = `https://wa.me/${mobile}?text=${text}`;
+  window.open(url, '_blank');
+}
+
+// ── DASHBOARD MODULE LOGIC ──
+let dashboardChart = null;
+
+async function initDashboard() {
+  const transactions = await getData('Transactions');
+  const pipeline = await getData('Pipeline');
+  const followups = await getData('FollowUps');
+  
+  // Daily Revenue Calculation
+  const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+  const dailyTx = transactions.filter(t => new Date(t.timestamp).toLocaleDateString('en-CA') === todayStr);
+  const dailyRev = dailyTx.reduce((sum, t) => sum + (parseFloat(t.totalAmount) || 0), 0);
+  
+  // Monthly Revenue Calculation
+  const currentMonthStr = todayStr.substring(0, 7); // YYYY-MM
+  const monthlyTx = transactions.filter(t => new Date(t.timestamp).toLocaleDateString('en-CA').startsWith(currentMonthStr));
+  const monthlyRev = monthlyTx.reduce((sum, t) => sum + (parseFloat(t.totalAmount) || 0), 0);
+
+  // Update KPIs
+  document.getElementById('dashboard-kpi-daily').textContent = `₹${dailyRev}`;
+  document.getElementById('dashboard-progress-daily').style.width = `${Math.min((dailyRev / 5000) * 100, 100)}%`;
+  
+  document.getElementById('dashboard-kpi-monthly').textContent = `₹${monthlyRev}`;
+  document.getElementById('dashboard-progress-monthly').style.width = `${Math.min((monthlyRev / 150000) * 100, 100)}%`;
+  
+  document.getElementById('dashboard-kpi-cases').textContent = pipeline.filter(p => p.status !== 'Closed').length;
+  
+  const dueToday = followups.filter(f => new Date(f.dueDate).toLocaleDateString('en-CA') === todayStr && f.status !== 'Completed').length;
+  document.getElementById('dashboard-kpi-followups').textContent = dueToday;
+
+  // Render Chart
+  renderDashboardChart(transactions);
+
+  // Top Services Today
+  const serviceCounts = {};
+  dailyTx.forEach(t => {
+    let cart = [];
+    try { cart = JSON.parse(t.services || '[]'); } catch {}
+    if(Array.isArray(t.cart)) cart = t.cart;
+    cart.forEach(item => {
+      serviceCounts[item.serviceType] = (serviceCounts[item.serviceType] || 0) + 1;
+    });
+  });
+  
+  const topServicesTable = document.getElementById('dashboard-top-services').querySelector('tbody');
+  const sortedServices = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  
+  if (sortedServices.length === 0) {
+    topServicesTable.innerHTML = `<tr><td colspan="2" style="text-align: center;">No data yet</td></tr>`;
+  } else {
+    topServicesTable.innerHTML = sortedServices.map(([srv, count]) => `
+      <tr><td>${srv}</td><td style="text-align: right;">${count}</td></tr>
+    `).join('');
+  }
+}
+
+function renderDashboardChart(transactions) {
+  const ctx = document.getElementById('revenueChart');
+  if(!ctx) return;
+  
+  // Last 7 days labels and data
+  const labels = [];
+  const data = [];
+  
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toLocaleDateString('en-CA');
+    labels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+    
+    const dayRev = transactions
+      .filter(t => new Date(t.timestamp).toLocaleDateString('en-CA') === dateStr)
+      .reduce((sum, t) => sum + (parseFloat(t.totalAmount) || 0), 0);
+    data.push(dayRev);
+  }
+
+  if (dashboardChart) dashboardChart.destroy();
+  
+  dashboardChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Revenue (₹)',
+        data: data,
+        backgroundColor: 'rgba(99, 102, 241, 0.8)',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: { 
+          beginAtZero: true,
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: '#a0a0b8' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#a0a0b8' }
+        }
+      }
+    }
+  });
+}
+
+// ── PIPELINE MODULE LOGIC ──
+const PIPELINE_STAGES = [
+  'New Lead', 'In Progress', 'Application Submitted', 'Pending Documents', 'Completed', 'Cancelled'
+];
+let pipelineCases = [];
+
+async function initPipeline() {
+  pipelineCases = await getData('Pipeline');
+  renderKanbanBoard();
+  
+  // Populate service dropdown in new case modal
+  const serviceSelect = document.getElementById('pipeline-new-service');
+  if (serviceSelect) {
+    serviceSelect.innerHTML = SERVICE_CATALOG.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+  }
+}
+
+function renderKanbanBoard() {
+  const board = document.getElementById('kanban-board');
+  if (!board) return;
+  
+  const searchQ = document.getElementById('pipeline-search').value.toLowerCase();
+  const filterStage = document.getElementById('pipeline-filter-stage').value;
+  
+  let filtered = pipelineCases;
+  if (filterStage !== 'All') filtered = filtered.filter(c => c.stage === filterStage);
+  if (searchQ) filtered = filtered.filter(c => (c.customerName && c.customerName.toLowerCase().includes(searchQ)) || (c.serviceType && c.serviceType.toLowerCase().includes(searchQ)));
+  
+  board.innerHTML = PIPELINE_STAGES.map(stage => {
+    const stageCases = filtered.filter(c => (c.stage || 'New Lead') === stage).sort((a,b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+    return `
+      <div class="kanban-column" ondragover="allowDrop(event)" ondrop="dropCase(event, '${stage}')">
+        <div class="kanban-column-header">
+          <span>${stage}</span>
+          <span class="kanban-column-count">${stageCases.length}</span>
+        </div>
+        <div class="kanban-cards" id="kanban-col-${stage.replace(/\s+/g, '-')}">
+          ${stageCases.map(c => `
+            <div class="kanban-card" draggable="true" ondragstart="dragCase(event, '${c.id}')" id="card-${c.id}">
+              <div class="kc-header">
+                <div class="kc-title">${c.serviceType}</div>
+                <div class="kc-badge">${c.priority || 'Normal'}</div>
+              </div>
+              <div class="kc-meta mt-sm">
+                <span>&#128100; ${c.customerName || 'Unknown'}</span>
+              </div>
+              <div class="kc-meta">
+                <span>&#128339; ${new Date(c.updatedAt || c.createdAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterPipeline() {
+  renderKanbanBoard();
+}
+
+function dragCase(ev, caseId) {
+  ev.dataTransfer.setData("caseId", caseId);
+  ev.target.style.opacity = '0.5';
+}
+
+function allowDrop(ev) {
+  ev.preventDefault();
+  let cardList = ev.target.closest('.kanban-cards');
+  if(cardList) cardList.classList.add('drag-over');
+}
+
+document.addEventListener('dragend', (ev) => {
+  if(ev.target.classList && ev.target.classList.contains('kanban-card')) {
+    ev.target.style.opacity = '1';
+  }
+});
+
+document.addEventListener('dragleave', (ev) => {
+  let cardList = ev.target.closest('.kanban-cards');
+  if(cardList) cardList.classList.remove('drag-over');
+});
+
+async function dropCase(ev, newStage) {
+  ev.preventDefault();
+  document.querySelectorAll('.kanban-cards').forEach(el => el.classList.remove('drag-over'));
+  
+  const caseId = ev.dataTransfer.getData("caseId");
+  const caseItem = pipelineCases.find(c => c.id === caseId);
+  
+  if (caseItem && caseItem.stage !== newStage) {
+    caseItem.stage = newStage;
+    caseItem.updatedAt = new Date().toISOString();
+    
+    // Optimistic UI update
+    renderKanbanBoard();
+    
+    // Persist
+    await updateDataRow('Pipeline', caseId, { stage: newStage, updatedAt: caseItem.updatedAt });
+  }
+}
+
+// -- New Case Modal --
+function showNewCaseModal() {
+  document.getElementById('new-case-modal').classList.remove('hidden');
+}
+
+function closeNewCaseModal() {
+  document.getElementById('new-case-modal').classList.add('hidden');
+  document.getElementById('pipeline-new-cust-search').value = '';
+  document.getElementById('pipeline-selected-cust').classList.add('hidden');
+  document.getElementById('pipeline-new-notes').value = '';
+  pipelineState.selectedCustomer = null;
+}
+
+let pipelineState = { selectedCustomer: null };
+
+function handlePipelineCustSearch(query) {
+  const dropdown = document.getElementById('pipeline-new-cust-dropdown');
+  if (!query || query.length < 2) {
+    dropdown.classList.add('hidden');
+    return;
+  }
+  const q = query.toLowerCase();
+  const filtered = crmCustomers.filter(c => (c.name && c.name.toLowerCase().includes(q)) || (c.mobile && c.mobile.includes(q))).slice(0, 5);
+  
+  if (filtered.length === 0) {
+    dropdown.innerHTML = `<div class="p-sm text-sm text-muted text-center" style="padding: 10px;">No matches found.</div>`;
+  } else {
+    dropdown.innerHTML = filtered.map(c => `
+      <div class="dropdown-item" onclick="selectPipelineCustomer('${c.id}')">
+        <div class="font-semibold text-sm">${c.name}</div>
+        <div class="text-xs text-muted">${c.mobile}</div>
+      </div>
+    `).join('');
+  }
+  dropdown.classList.remove('hidden');
+}
+
+function selectPipelineCustomer(id) {
+  const customer = crmCustomers.find(c => c.id === id);
+  if (!customer) return;
+  pipelineState.selectedCustomer = customer;
+  document.getElementById('pipeline-new-cust-search').value = '';
+  document.getElementById('pipeline-new-cust-dropdown').classList.add('hidden');
+  
+  const selectedDiv = document.getElementById('pipeline-selected-cust');
+  selectedDiv.classList.remove('hidden');
+  selectedDiv.textContent = `Selected: ${customer.name} (${customer.mobile})`;
+}
+
+async function submitNewCase() {
+  if (!pipelineState.selectedCustomer) return alert("Please select a customer.");
+  const serviceType = document.getElementById('pipeline-new-service').value;
+  const notes = document.getElementById('pipeline-new-notes').value;
+  
+  const currentUser = JSON.parse(sessionStorage.getItem('csc_current_user') || '{}');
+  const caseData = {
+    id: `pipe_${Date.now()}`,
+    customerId: pipelineState.selectedCustomer.id,
+    customerName: pipelineState.selectedCustomer.name,
+    customerMobile: pipelineState.selectedCustomer.mobile,
+    serviceType: serviceType,
+    stage: 'New Lead',
+    priority: 'Normal',
+    notes: notes,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    assignedTo: currentUser.id || 'admin'
+  };
+  
+  // Optimistic
+  pipelineCases.push(caseData);
+  renderKanbanBoard();
+  closeNewCaseModal();
+  
+  // Persist
+  await saveData('Pipeline', caseData);
+}
+
+// ── FOLLOW-UPS MODULE LOGIC ──
+let followupsData = [];
+let currentFUTab = 'today';
+
+async function initFollowUps() {
+  followupsData = await getData('FollowUps');
+  document.getElementById('fu-new-date').value = new Date().toLocaleDateString('en-CA');
+  renderFollowUps();
+}
+
+function setFollowupTab(tab, btnElement) {
+  currentFUTab = tab;
+  document.querySelectorAll('.sub-nav-btn').forEach(b => b.classList.remove('active'));
+  btnElement.classList.add('active');
+  renderFollowUps();
+}
+
+function renderFollowUps() {
+  const container = document.getElementById('followups-list');
+  if (!container) return;
+  
+  const searchQ = document.getElementById('followups-search').value.toLowerCase();
+  const todayStr = new Date().toLocaleDateString('en-CA');
+  
+  let overdueCount = 0;
+  
+  const filtered = followupsData.filter(f => {
+    if (f.status === 'Completed') return false;
+    
+    // Calculate overdue badge logic even if not rendering
+    const isOverdue = f.dueDate < todayStr;
+    if (isOverdue) overdueCount++;
+    
+    if (searchQ && !((f.customerName && f.customerName.toLowerCase().includes(searchQ)) || (f.subject && f.subject.toLowerCase().includes(searchQ)))) return false;
+    
+    if (currentFUTab === 'today') return f.dueDate === todayStr;
+    if (currentFUTab === 'overdue') return isOverdue;
+    if (currentFUTab === 'upcoming') return f.dueDate > todayStr && f.dueDate <= new Date(Date.now() + 7*24*60*60*1000).toLocaleDateString('en-CA');
+    return false;
+  }).sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate));
+  
+  const badge = document.getElementById('fu-badge-overdue');
+  if (badge) {
+    badge.textContent = overdueCount;
+    badge.style.display = overdueCount > 0 ? 'inline-block' : 'none';
+  }
+  
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="text-center text-muted text-sm mt-lg">No follow-ups for this view.</div>`;
+    return;
+  }
+  
+  container.innerHTML = filtered.map(f => {
+    const statusClass = f.dueDate < todayStr ? 'status-overdue' : (f.dueDate === todayStr ? 'status-today' : 'status-upcoming');
+    return `
+      <div class="followup-card ${statusClass}" id="fu-${f.id}">
+        <div class="followup-info" style="flex:1;">
+          <h4>${f.customerName} <span class="text-xs text-muted font-normal ml-sm">${f.customerMobile}</span></h4>
+          <p class="font-semibold text-primary-c mt-sm">${f.subject}</p>
+          <p class="mt-sm">${f.notes || ''}</p>
+          <div class="followup-meta">
+            <span>&#128197; Due: ${new Date(f.dueDate).toLocaleDateString()}</span>
+            ${f.status === 'Snoozed' ? '<span class="text-warning">&#9200; Snoozed</span>' : ''}
+          </div>
+        </div>
+        <div class="followup-actions">
+          <button class="btn btn-sm btn-success" onclick="markFUDone('${f.id}')" title="Mark Done">&#10003;</button>
+          <button class="btn btn-sm btn-secondary" onclick="snoozeFU('${f.id}')" title="Snooze">&#9200;</button>
+          <button class="btn btn-sm" style="background:#25D366; color:#fff;" onclick="sendFUWhatsApp('${f.id}')" title="WhatsApp">&#128222;</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function markFUDone(id) {
+  const f = followupsData.find(x => x.id === id);
+  if (!f) return;
+  f.status = 'Completed';
+  renderFollowUps();
+  await updateDataRow('FollowUps', id, { status: 'Completed', completedAt: new Date().toISOString() });
+}
+
+async function snoozeFU(id) {
+  const f = followupsData.find(x => x.id === id);
+  if (!f) return;
+  const newDate = prompt("Enter new due date (YYYY-MM-DD):", f.dueDate);
+  if (newDate && newDate !== f.dueDate) {
+    f.dueDate = newDate;
+    f.status = 'Snoozed';
+    renderFollowUps();
+    await updateDataRow('FollowUps', id, { dueDate: newDate, status: 'Snoozed' });
+  }
+}
+
+function sendFUWhatsApp(id) {
+  const f = followupsData.find(x => x.id === id);
+  if (!f) return;
+  const text = `Hello ${f.customerName}, this is a reminder regarding your ${f.subject} at Siraj CSC.`;
+  let mobile = f.customerMobile;
+  if (!mobile.startsWith('91') && mobile.length === 10) mobile = '91' + mobile;
+  window.open(`https://wa.me/${mobile}?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+// Modal Logic
+let fuState = { selectedCustomer: null };
+
+function showNewFollowupModal() {
+  document.getElementById('new-followup-modal').classList.remove('hidden');
+}
+
+function closeNewFollowupModal() {
+  document.getElementById('new-followup-modal').classList.add('hidden');
+  document.getElementById('fu-new-cust-search').value = '';
+  document.getElementById('fu-selected-cust').classList.add('hidden');
+  document.getElementById('fu-new-subject').value = '';
+  document.getElementById('fu-new-notes').value = '';
+  fuState.selectedCustomer = null;
+}
+
+function handleFUCustSearch(query) {
+  const dropdown = document.getElementById('fu-new-cust-dropdown');
+  if (!query || query.length < 2) {
+    dropdown.classList.add('hidden');
+    return;
+  }
+  const q = query.toLowerCase();
+  const filtered = crmCustomers.filter(c => (c.name && c.name.toLowerCase().includes(q)) || (c.mobile && c.mobile.includes(q))).slice(0, 5);
+  
+  if (filtered.length === 0) {
+    dropdown.innerHTML = `<div class="p-sm text-sm text-muted text-center" style="padding: 10px;">No matches found.</div>`;
+  } else {
+    dropdown.innerHTML = filtered.map(c => `
+      <div class="dropdown-item" onclick="selectFUCustomer('${c.id}')">
+        <div class="font-semibold text-sm">${c.name}</div>
+        <div class="text-xs text-muted">${c.mobile}</div>
+      </div>
+    `).join('');
+  }
+  dropdown.classList.remove('hidden');
+}
+
+function selectFUCustomer(id) {
+  const customer = crmCustomers.find(c => c.id === id);
+  if (!customer) return;
+  fuState.selectedCustomer = customer;
+  document.getElementById('fu-new-cust-search').value = '';
+  document.getElementById('fu-new-cust-dropdown').classList.add('hidden');
+  
+  const selectedDiv = document.getElementById('fu-selected-cust');
+  selectedDiv.classList.remove('hidden');
+  selectedDiv.textContent = `Selected: ${customer.name} (${customer.mobile})`;
+}
+
+async function submitNewFollowup() {
+  if (!fuState.selectedCustomer) return alert("Please select a customer.");
+  const subject = document.getElementById('fu-new-subject').value;
+  if (!subject) return alert("Subject is required.");
+  const dueDate = document.getElementById('fu-new-date').value;
+  const notes = document.getElementById('fu-new-notes').value;
+  
+  const currentUser = JSON.parse(sessionStorage.getItem('csc_current_user') || '{}');
+  const fuData = {
+    id: `fu_${Date.now()}`,
+    customerId: fuState.selectedCustomer.id,
+    customerName: fuState.selectedCustomer.name,
+    customerMobile: fuState.selectedCustomer.mobile,
+    subject: subject,
+    dueDate: dueDate,
+    notes: notes,
+    status: 'Pending',
+    createdAt: new Date().toISOString(),
+    createdBy: currentUser.id || 'admin'
+  };
+  
+  followupsData.push(fuData);
+  renderFollowUps();
+  closeNewFollowupModal();
+  
+  await saveData('FollowUps', fuData);
+}
+
+function initApp(user) {
+  startClock();
+  startSyncEngine(); // Phase 1.4
+  initConnectivityStatus(); // Phase 1.4
+  initDriveAPI(); // Phase 1.3
+  initCRM(); // Phase 2.1
+  initBilling(); // Phase 2.2
+  initDashboard(); // Phase 3.1
+  initPipeline(); // Phase 3.2
+  initFollowUps(); // Phase 3.3
+}
+
+// ── INITIALIZATION ──
+document.addEventListener('DOMContentLoaded', () => {
+  renderSidebar();
+  
+  const savedUser = sessionStorage.getItem('csc_current_user');
+  if (savedUser) {
+    loginSuccess(JSON.parse(savedUser));
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+});
+</script>
+</body>
+</html>
