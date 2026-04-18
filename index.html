@@ -467,10 +467,10 @@ ul{list-style:none}
                   </div>
                 </div>
 
-                <div class="grid-2 mt-sm">
-                  <!-- For plan 2.3, we'll hook up the actual print/save buttons -->
-                  <button class="btn btn-secondary" style="justify-content: center;" onclick="previewBill()">Preview</button>
-                  <button class="btn btn-primary" style="justify-content: center;" onclick="saveBill()">Save & Print</button>
+                <div class="grid-3 mt-sm" id="billing-action-buttons" style="display: none; gap: var(--sp-sm);">
+                  <button class="btn btn-success" style="justify-content: center; padding: 8px 4px; font-size: 0.8rem;" onclick="saveBillOnly()">Save Bill</button>
+                  <button class="btn btn-primary" style="justify-content: center; padding: 8px 4px; font-size: 0.8rem;" onclick="printReceiptOnly()">Print Receipt</button>
+                  <button class="btn btn-success" style="justify-content: center; background-color: #25D366; color: white; padding: 8px 4px; font-size: 0.8rem;" onclick="whatsappReceiptOnly()">&#128222; WhatsApp</button>
                 </div>
               </div>
             </div>
@@ -703,7 +703,7 @@ const API = {
       const res = await fetch(this.url, {
         method: 'POST',
         body: JSON.stringify({ action: 'append', sheet, data }),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error);
@@ -723,7 +723,7 @@ const API = {
       const res = await fetch(this.url, {
         method: 'POST',
         body: JSON.stringify({ action: 'update', sheet, rowId, data }),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error);
@@ -743,7 +743,7 @@ const API = {
       const res = await fetch(this.url, {
         method: 'POST',
         body: JSON.stringify({ action: 'delete', sheet, rowId }),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error);
@@ -1685,6 +1685,7 @@ function selectBillingCustomer(id) {
 
 function clearBillingCustomer() {
   billingState.customer = null;
+  currentSavedBillId = null;
   document.getElementById('billing-selected-customer').classList.add('hidden');
   document.getElementById('billing-customer-search').parentElement.classList.remove('hidden');
   document.getElementById('billing-customer-search').focus();
@@ -1727,7 +1728,10 @@ function removeFromBill(itemId) {
   renderCart();
 }
 
+let currentSavedBillId = null;
+
 function updateLinePrice(itemId, newPrice) {
+  currentSavedBillId = null;
   const val = parseFloat(newPrice);
   if (isNaN(val)) return;
   const item = billingState.cart.find(i => i.id === itemId);
@@ -1738,12 +1742,18 @@ function updateLinePrice(itemId, newPrice) {
 }
 
 function renderCart() {
+  currentSavedBillId = null;
   const container = document.getElementById('billing-cart-items');
+  const actionBtns = document.getElementById('billing-action-buttons');
+  
   if (billingState.cart.length === 0) {
     container.innerHTML = `<div class="text-center text-muted text-sm mt-lg">Cart is empty. Add services from the left.</div>`;
     calculateTotal();
+    if(actionBtns) actionBtns.style.display = 'none';
     return;
   }
+  
+  if(actionBtns) actionBtns.style.display = 'grid';
   
   container.innerHTML = billingState.cart.map(item => `
     <div class="cart-item">
@@ -1774,36 +1784,15 @@ function setPaymentMode(mode, btnElement) {
 }
 
 // ── RECEIPT & SAVE LOGIC ──
-function previewBill() {
-  if (!billingState.customer) return alert('Please select a customer first.');
-  if (billingState.cart.length === 0) return alert('Cart is empty.');
-  
-  const billId = `BILL_${Date.now().toString().slice(-6)}`;
-  const total = calculateTotal();
-  const tx = {
-    billId,
-    customerName: billingState.customer.name,
-    customerMobile: billingState.customer.mobile,
-    timestamp: new Date().toISOString(),
-    cart: billingState.cart,
-    total,
-    paymentMode: billingState.paymentMode,
-    user: JSON.parse(sessionStorage.getItem('csc_current_user') || '{}').name || 'Admin'
-  };
-  
-  injectReceiptHTML(tx);
-  alert(`Preview generated for ${billId}. Click Save & Print to complete.`);
-}
-
-async function saveBill() {
-  if (!billingState.customer) return alert('Please select a customer first.');
-  if (billingState.cart.length === 0) return alert('Cart is empty.');
+function prepareTransaction() {
+  if (!billingState.customer) { alert('Please select a customer first.'); return null; }
+  if (billingState.cart.length === 0) { alert('Cart is empty.'); return null; }
   
   const currentUser = JSON.parse(sessionStorage.getItem('csc_current_user') || '{}');
-  const billId = `BILL_${Date.now().toString().slice(-6)}`;
+  const billId = currentSavedBillId || `BILL_${Date.now().toString().slice(-6)}`;
   const total = calculateTotal();
   
-  const transaction = {
+  return {
     id: `tx_${Date.now()}`,
     billId,
     customerId: billingState.customer.id,
@@ -1814,11 +1803,20 @@ async function saveBill() {
     paymentMode: billingState.paymentMode,
     timestamp: new Date().toISOString(),
     userId: currentUser.id,
-    userName: currentUser.name
+    userName: currentUser.name || 'Admin'
   };
+}
 
-  await saveData('Transactions', transaction);
+async function saveBillOnly() {
+  if (currentSavedBillId) return alert('This bill is already saved! You can print or send it via WhatsApp.');
   
+  const tx = prepareTransaction();
+  if (!tx) return;
+  
+  currentSavedBillId = tx.billId; // Lock it so subsequent saves/prints use this ID
+  
+  await saveData('Transactions', tx);
+  const currentUser = JSON.parse(sessionStorage.getItem('csc_current_user') || '{}');
   await saveData('AuditLog', {
     id: `audit_${Date.now()}`,
     timestamp: new Date().toISOString(),
@@ -1826,24 +1824,29 @@ async function saveBill() {
     userName: currentUser.name,
     module: 'Billing',
     action: 'create_bill',
-    recordId: transaction.billId,
-    details: `Total: ₹${total}, Mode: ${transaction.paymentMode}`
+    recordId: tx.billId,
+    details: `Total: ₹${tx.totalAmount}, Mode: ${tx.paymentMode}`
   });
+  
+  alert('Bill saved successfully! You can now print or send via WhatsApp.');
+}
 
+function printReceiptOnly() {
+  const tx = prepareTransaction();
+  if (!tx) return;
   injectReceiptHTML({
-    ...transaction,
+    ...tx,
     cart: billingState.cart,
-    total: total,
-    user: currentUser.name
+    total: tx.totalAmount,
+    user: tx.userName
   });
   window.print();
+}
 
-  sendWhatsAppReceipt(transaction, billingState.cart);
-
-  billingState.cart = [];
-  clearBillingCustomer();
-  renderCart();
-  alert('Bill saved successfully!');
+function whatsappReceiptOnly() {
+  const tx = prepareTransaction();
+  if (!tx) return;
+  sendWhatsAppReceipt(tx, billingState.cart);
 }
 
 function injectReceiptHTML(tx) {
