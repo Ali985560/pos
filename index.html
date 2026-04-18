@@ -535,9 +535,137 @@ ul{list-style:none}
             <!-- Populated by JS -->
           </div>
         </section>
-        <section id="module-dayclose" class="module-panel" data-title="Day Close"><div class="module-placeholder"><div class="placeholder-icon">&#128274;</div><h3>Day Close</h3><p>Cash reconciliation &amp; EOD summary — coming in Phase 4</p></div></section>
-        <section id="module-ledger" class="module-panel" data-title="Ledger"><div class="module-placeholder"><div class="placeholder-icon">&#128214;</div><h3>Ledger</h3><p>Income, expenses &amp; 50-50 profit split — coming in Phase 4</p></div></section>
-        <section id="module-commission" class="module-panel" data-title="Commission"><div class="module-placeholder"><div class="placeholder-icon">&#37;</div><h3>Commission Calculator</h3><p>AEPS, Insurance &amp; IRCTC commissions — coming in Phase 4</p></div></section>
+        <section id="module-dayclose" class="module-panel" data-title="Day Close">
+          <div class="flex items-center justify-between mb-lg">
+            <h2 class="text-xl font-bold" style="color: var(--text-primary);">Day Close Reconciliation</h2>
+            <input type="date" id="dayclose-date" class="input" style="width: auto;" onchange="initDayClose()">
+          </div>
+          
+          <div class="grid grid-3 gap-md mb-lg">
+            <div class="stat-card">
+              <div class="text-muted text-sm uppercase">Expected Cash</div>
+              <div class="stat-value text-green" id="dayclose-expected-cash">₹0</div>
+              <div class="text-xs text-muted mt-sm">From today's cash bills</div>
+            </div>
+            <div class="stat-card">
+              <div class="text-muted text-sm uppercase">UPI Total</div>
+              <div class="stat-value text-blue" id="dayclose-upi-total">₹0</div>
+            </div>
+            <div class="stat-card">
+              <div class="text-muted text-sm uppercase">Other Total</div>
+              <div class="stat-value text-orange" id="dayclose-other-total">₹0</div>
+            </div>
+          </div>
+
+          <div class="card p-lg mb-lg">
+            <h3 class="font-semibold mb-md">Cash Drawer Reconciliation</h3>
+            <div class="grid grid-2 gap-md items-end">
+              <div>
+                <label class="text-sm text-muted mb-xs block">Actual Cash in Drawer</label>
+                <input type="number" id="dayclose-actual-cash" class="input text-lg" placeholder="Enter amount..." oninput="calculateDayCloseDiscrepancy()">
+              </div>
+              <div>
+                <div class="text-sm text-muted mb-xs">Discrepancy</div>
+                <div id="dayclose-discrepancy" class="text-xl font-bold" style="color: var(--text-muted);">₹0</div>
+              </div>
+            </div>
+            <div class="mt-md">
+              <label class="text-sm text-muted mb-xs block">Notes (Optional)</label>
+              <input type="text" id="dayclose-notes" class="input" placeholder="Reason for discrepancy or other notes...">
+            </div>
+          </div>
+
+          <div class="flex gap-sm">
+            <button class="btn btn-primary flex-1" onclick="saveDayClose()">Save Day Close</button>
+            <button class="btn btn-success flex-1" onclick="sendDayCloseWhatsApp()">WhatsApp Summary</button>
+          </div>
+        </section>
+
+        <section id="module-ledger" class="module-panel" data-title="Ledger">
+          <div class="flex items-center justify-between mb-lg">
+            <h2 class="text-xl font-bold" style="color: var(--text-primary);">Ledger & P&L</h2>
+            <div class="flex gap-sm">
+              <input type="month" id="ledger-month" class="input" style="width: auto;" onchange="initLedger()">
+              <button class="btn btn-primary" onclick="showLedgerModal()">+ Add Entry</button>
+            </div>
+          </div>
+
+          <div class="grid grid-3 gap-md mb-lg">
+            <div class="stat-card">
+              <div class="text-muted text-sm uppercase">Total Income</div>
+              <div class="stat-value text-green" id="ledger-total-income">₹0</div>
+              <div class="text-xs text-muted mt-sm">Billing + Manual</div>
+            </div>
+            <div class="stat-card">
+              <div class="text-muted text-sm uppercase">Total Expenses</div>
+              <div class="stat-value text-red" id="ledger-total-expense">₹0</div>
+            </div>
+            <div class="stat-card" style="border: 1px solid var(--accent-primary);">
+              <div class="text-muted text-sm uppercase">Net Profit</div>
+              <div class="stat-value text-primary" id="ledger-net-profit">₹0</div>
+              <div class="flex justify-between mt-sm text-xs font-semibold">
+                <span class="text-blue">Siraj: <span id="ledger-share-siraj">₹0</span></span>
+                <span class="text-orange">Sohail: <span id="ledger-share-sohail">₹0</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card p-0 overflow-hidden">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Category</th>
+                  <th>Description</th>
+                  <th class="text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody id="ledger-table-body">
+                <tr><td colspan="5" class="text-center p-md text-muted">Loading ledger entries...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="module-commission" class="module-panel" data-title="Commission">
+          <div class="flex items-center justify-between mb-lg">
+            <h2 class="text-xl font-bold" style="color: var(--text-primary);">Commission Calculator</h2>
+            <button class="btn btn-primary" onclick="showCommissionModal()">+ Add Commission</button>
+          </div>
+
+          <div class="grid grid-3 gap-md mb-lg">
+            <div class="stat-card">
+              <div class="text-muted text-sm uppercase">AEPS Comm.</div>
+              <div class="stat-value" id="comm-aeps">₹0</div>
+            </div>
+            <div class="stat-card">
+              <div class="text-muted text-sm uppercase">Insurance Comm.</div>
+              <div class="stat-value" id="comm-insurance">₹0</div>
+            </div>
+            <div class="stat-card">
+              <div class="text-muted text-sm uppercase">IRCTC Comm.</div>
+              <div class="stat-value" id="comm-irctc">₹0</div>
+            </div>
+          </div>
+
+          <div class="card p-0 overflow-hidden">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Category</th>
+                  <th>Description</th>
+                  <th class="text-right">Gross Amount</th>
+                  <th class="text-right">Commission</th>
+                </tr>
+              </thead>
+              <tbody id="commission-table-body">
+                <tr><td colspan="5" class="text-center p-md text-muted">Loading commission entries...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
         <section id="module-documents" class="module-panel" data-title="Documents"><div class="module-placeholder"><div class="placeholder-icon">&#128193;</div><h3>Documents Tracker</h3><p>Google Drive upload &amp; status tracking — coming in Phase 5</p></div></section>
         <section id="module-reports" class="module-panel" data-title="Reports"><div class="module-placeholder"><div class="placeholder-icon">&#128202;</div><h3>Reports &amp; Analytics</h3><p>ITR/GST-ready exports &amp; staff performance — coming in Phase 5</p></div></section>
         <section id="module-loyalty" class="module-panel" data-title="Loyalty"><div class="module-placeholder"><div class="placeholder-icon">&#9733;</div><h3>Loyalty System</h3><p>VIP customers &amp; visit streaks — coming in Phase 6</p></div></section>
@@ -548,7 +676,45 @@ ul{list-style:none}
         <section id="module-audit" class="module-panel" data-title="Audit Trail"><div class="module-placeholder"><div class="placeholder-icon">&#128737;</div><h3>Audit Trail</h3><p>Immutable action log — coming in Phase 5</p></div></section>
         <section id="module-knowledge" class="module-panel" data-title="Knowledge Base"><div class="module-placeholder"><div class="placeholder-icon">&#128218;</div><h3>Knowledge Base</h3><p>Staff training guides — coming in Phase 7</p></div></section>
         <section id="module-staff" class="module-panel" data-title="Staff Panel"><div class="module-placeholder"><div class="placeholder-icon">&#128100;</div><h3>Staff Panel</h3><p>Role management &amp; access logs — coming in Phase 7</p></div></section>
-        <section id="module-import" class="module-panel" data-title="Import / Export"><div class="module-placeholder"><div class="placeholder-icon">&#8645;</div><h3>Import / Export</h3><p>Odoo CSV import &amp; export — coming in Phase 4</p></div></section>
+        <section id="module-import" class="module-panel" data-title="Import / Export">
+          <h2 class="text-xl font-bold mb-lg" style="color: var(--text-primary);">Data Import / Export</h2>
+          
+          <div class="grid grid-2 gap-md">
+            <div class="card p-lg">
+              <h3 class="font-semibold mb-md">Import from Odoo (CSV)</h3>
+              <p class="text-sm text-muted mb-md">Upload your exported CSV file from Odoo. The system will map standard fields and import them into Pipeline and CRM.</p>
+              
+              <div id="import-dropzone" class="border-dashed border-2 border-gray-600 rounded-md p-xl text-center cursor-pointer mb-md" onclick="document.getElementById('import-file').click()" style="background: var(--bg-hover);">
+                <div class="text-2xl mb-sm">📄</div>
+                <div class="font-medium">Click or Drag CSV here</div>
+                <div class="text-xs text-muted mt-xs">.csv files only</div>
+                <input type="file" id="import-file" accept=".csv" class="hidden" onchange="handleCSVUpload(event)">
+              </div>
+              
+              <div id="import-mapping-ui" class="hidden">
+                <h4 class="font-semibold text-sm mb-sm">Column Mapping</h4>
+                <div id="import-mapping-container" class="mb-md"></div>
+                <button class="btn btn-primary w-full" onclick="processImport()">Start Import</button>
+              </div>
+              
+              <div id="import-preview" class="mt-md text-sm hidden">
+                <div class="font-semibold mb-xs text-green">File loaded successfully!</div>
+                <div id="import-stats" class="text-muted"></div>
+              </div>
+            </div>
+
+            <div class="card p-lg">
+              <h3 class="font-semibold mb-md">Export Data</h3>
+              <p class="text-sm text-muted mb-md">Download a full backup of your customers and pipeline cases as CSV files.</p>
+              
+              <div class="flex flex-col gap-sm">
+                <button class="btn btn-outline" onclick="exportDataCSV('Customers')">Export Customers (CSV)</button>
+                <button class="btn btn-outline" onclick="exportDataCSV('Pipeline')">Export Pipeline (CSV)</button>
+                <button class="btn btn-outline" onclick="exportDataCSV('Transactions')">Export Transactions (CSV)</button>
+              </div>
+            </div>
+          </div>
+        </section>
         <section id="module-settings" class="module-panel" data-title="Settings"><div class="module-placeholder"><div class="placeholder-icon">&#9881;</div><h3>Settings</h3><p>Prices, targets &amp; configuration — coming in Phase 5</p></div></section>
       </main>
     </div>
@@ -558,6 +724,73 @@ ul{list-style:none}
   </div>
 
   <!-- MODALS -->
+  <div id="ledger-modal" class="modal-overlay hidden">
+    <div class="modal-card card">
+      <div class="flex justify-between items-center mb-md">
+        <h3 class="card-title" style="margin:0;">Add Ledger Entry</h3>
+        <button class="btn-icon btn-sm" onclick="closeLedgerModal()">&#10005;</button>
+      </div>
+      <div class="form-group mb-sm">
+        <label>Type</label>
+        <select id="ledger-type" class="input">
+          <option value="Expense">Expense</option>
+          <option value="Income">Income (Manual)</option>
+        </select>
+      </div>
+      <div class="form-group mb-sm">
+        <label>Date</label>
+        <input type="date" id="ledger-date" class="input">
+      </div>
+      <div class="form-group mb-sm">
+        <label>Category</label>
+        <input type="text" id="ledger-category" class="input" placeholder="e.g. Rent, Electricity, Tea">
+      </div>
+      <div class="form-group mb-sm">
+        <label>Description</label>
+        <input type="text" id="ledger-desc" class="input" placeholder="Details...">
+      </div>
+      <div class="form-group mb-md">
+        <label>Amount (₹)</label>
+        <input type="number" id="ledger-amount" class="input" placeholder="0.00">
+      </div>
+      <button class="btn btn-primary w-full" onclick="submitLedgerEntry()">Save Entry</button>
+    </div>
+  </div>
+
+  <div id="commission-modal" class="modal-overlay hidden">
+    <div class="modal-card card">
+      <div class="flex justify-between items-center mb-md">
+        <h3 class="card-title" style="margin:0;">Add Commission</h3>
+        <button class="btn-icon btn-sm" onclick="closeCommissionModal()">&#10005;</button>
+      </div>
+      <div class="form-group mb-sm">
+        <label>Date</label>
+        <input type="date" id="comm-date" class="input">
+      </div>
+      <div class="form-group mb-sm">
+        <label>Category</label>
+        <select id="comm-category" class="input">
+          <option value="AEPS">AEPS</option>
+          <option value="Insurance">Insurance</option>
+          <option value="IRCTC">IRCTC</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group mb-sm">
+        <label>Description (Customer/Policy)</label>
+        <input type="text" id="comm-desc" class="input" placeholder="Details...">
+      </div>
+      <div class="form-group mb-sm">
+        <label>Gross Amount (₹)</label>
+        <input type="number" id="comm-gross" class="input" placeholder="0.00">
+      </div>
+      <div class="form-group mb-md">
+        <label>Commission Earned (₹)</label>
+        <input type="number" id="comm-amount" class="input" placeholder="0.00">
+      </div>
+      <button class="btn btn-primary w-full" onclick="submitCommissionEntry()">Save Commission</button>
+    </div>
+  </div>
   <div id="new-case-modal" class="modal-overlay hidden">
     <div class="modal-card card">
       <div class="flex justify-between items-center mb-md">
@@ -1855,7 +2088,7 @@ async function prepareTransaction() {
     billId,
     customerId: billingState.customer.id,
     customerName: billingState.customer.name,
-    customerMobile: billingState.customer.mobile,
+    mobile: billingState.customer.mobile,
     services: JSON.stringify(billingState.cart),
     totalAmount: total,
     paymentMode: billingState.paymentMode,
@@ -2436,16 +2669,392 @@ async function submitNewFollowup() {
   await saveData('FollowUps', fuData);
 }
 
+// ── PHASE 4: DAY CLOSE MODULE ──
+async function initDayClose() {
+  const todayStr = document.getElementById('dayclose-date').value || new Date().toLocaleDateString('en-CA');
+  document.getElementById('dayclose-date').value = todayStr;
+  
+  const txData = await getData('Transactions');
+  const todayTx = txData.filter(t => t.timestamp && t.timestamp.startsWith(todayStr));
+  
+  let expectedCash = 0;
+  let upiTotal = 0;
+  let otherTotal = 0;
+  
+  todayTx.forEach(t => {
+    const amt = parseFloat(t.totalAmount) || 0;
+    if (t.paymentMode === 'Cash') expectedCash += amt;
+    else if (t.paymentMode === 'UPI') upiTotal += amt;
+    else otherTotal += amt;
+  });
+  
+  document.getElementById('dayclose-expected-cash').textContent = `₹${expectedCash}`;
+  document.getElementById('dayclose-expected-cash').dataset.value = expectedCash;
+  document.getElementById('dayclose-upi-total').textContent = `₹${upiTotal}`;
+  document.getElementById('dayclose-other-total').textContent = `₹${otherTotal}`;
+  
+  calculateDayCloseDiscrepancy();
+}
+
+function calculateDayCloseDiscrepancy() {
+  const expected = parseFloat(document.getElementById('dayclose-expected-cash').dataset.value) || 0;
+  const actual = parseFloat(document.getElementById('dayclose-actual-cash').value) || 0;
+  const diff = actual - expected;
+  
+  const discEl = document.getElementById('dayclose-discrepancy');
+  discEl.textContent = `₹${diff}`;
+  if (diff < 0) {
+    discEl.className = 'text-xl font-bold text-red';
+  } else if (diff > 0) {
+    discEl.className = 'text-xl font-bold text-orange';
+  } else {
+    discEl.className = 'text-xl font-bold text-green';
+  }
+}
+
+async function saveDayClose() {
+  const date = document.getElementById('dayclose-date').value;
+  const expected = parseFloat(document.getElementById('dayclose-expected-cash').dataset.value) || 0;
+  const actual = parseFloat(document.getElementById('dayclose-actual-cash').value) || 0;
+  const upi = parseFloat(document.getElementById('dayclose-upi-total').textContent.replace('₹','')) || 0;
+  const other = parseFloat(document.getElementById('dayclose-other-total').textContent.replace('₹','')) || 0;
+  const notes = document.getElementById('dayclose-notes').value;
+  const diff = actual - expected;
+  
+  const currentUser = JSON.parse(sessionStorage.getItem('csc_current_user') || '{}');
+  
+  const data = {
+    id: `dc_${Date.now()}`,
+    date: date,
+    expectedCash: expected,
+    actualCash: actual,
+    discrepancy: diff,
+    upiTotal: upi,
+    otherTotal: other,
+    closedBy: currentUser.name || 'Admin',
+    closedAt: new Date().toISOString(),
+    notes: notes,
+    whatsappSent: false
+  };
+  
+  await saveData('DayClose', data);
+  alert('Day Close saved successfully!');
+}
+
+function sendDayCloseWhatsApp() {
+  const date = document.getElementById('dayclose-date').value;
+  const expected = document.getElementById('dayclose-expected-cash').dataset.value;
+  const actual = document.getElementById('dayclose-actual-cash').value || 0;
+  const diff = actual - expected;
+  const upi = document.getElementById('dayclose-upi-total').textContent;
+  const other = document.getElementById('dayclose-other-total').textContent;
+  
+  const text = `*Day Close Report - ${date}*\n\n*Cash*\nExpected: ₹${expected}\nActual: ₹${actual}\nDiscrepancy: ₹${diff}\n\n*Other*\nUPI: ${upi}\nOther: ${other}\n\nClosed by: ${JSON.parse(sessionStorage.getItem('csc_current_user') || '{}').name}`;
+  
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+// ── PHASE 4: LEDGER MODULE ──
+let ledgerData = [];
+
+async function initLedger() {
+  const monthStr = document.getElementById('ledger-month').value || new Date().toISOString().slice(0, 7);
+  document.getElementById('ledger-month').value = monthStr;
+  
+  ledgerData = await getData('Ledger');
+  const txData = await getData('Transactions');
+  
+  const monthTx = txData.filter(t => t.timestamp && t.timestamp.startsWith(monthStr));
+  const monthLedger = ledgerData.filter(l => l.date && l.date.startsWith(monthStr));
+  
+  let totalIncome = 0;
+  let totalExpense = 0;
+  
+  monthTx.forEach(t => {
+    totalIncome += parseFloat(t.totalAmount) || 0;
+  });
+  
+  const tbody = document.getElementById('ledger-table-body');
+  let tableHtml = '';
+  
+  monthLedger.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(l => {
+    const amt = parseFloat(l.amount) || 0;
+    if (l.type === 'Income') totalIncome += amt;
+    else if (l.type === 'Expense') totalExpense += amt;
+    
+    tableHtml += `
+      <tr>
+        <td>${l.date}</td>
+        <td><span class="badge ${l.type === 'Income' ? 'badge-green' : 'badge-red'}">${l.type}</span></td>
+        <td>${l.category}</td>
+        <td>${l.description || '-'}</td>
+        <td class="text-right font-semibold ${l.type === 'Income' ? 'text-green' : 'text-red'}">₹${amt}</td>
+      </tr>
+    `;
+  });
+  
+  if (tableHtml === '') tableHtml = '<tr><td colspan="5" class="text-center p-md text-muted">No manual entries this month.</td></tr>';
+  tbody.innerHTML = tableHtml;
+  
+  const netProfit = totalIncome - totalExpense;
+  const half = netProfit / 2;
+  
+  document.getElementById('ledger-total-income').textContent = `₹${totalIncome}`;
+  document.getElementById('ledger-total-expense').textContent = `₹${totalExpense}`;
+  document.getElementById('ledger-net-profit').textContent = `₹${netProfit}`;
+  document.getElementById('ledger-share-siraj').textContent = `₹${half}`;
+  document.getElementById('ledger-share-sohail').textContent = `₹${half}`;
+}
+
+function showLedgerModal() { document.getElementById('ledger-modal').classList.remove('hidden'); document.getElementById('ledger-date').value = new Date().toLocaleDateString('en-CA'); }
+function closeLedgerModal() { document.getElementById('ledger-modal').classList.add('hidden'); }
+
+async function submitLedgerEntry() {
+  const type = document.getElementById('ledger-type').value;
+  const date = document.getElementById('ledger-date').value;
+  const cat = document.getElementById('ledger-category').value;
+  const desc = document.getElementById('ledger-desc').value;
+  const amt = document.getElementById('ledger-amount').value;
+  
+  if (!date || !cat || !amt) return alert("Date, Category, and Amount are required.");
+  
+  const currentUser = JSON.parse(sessionStorage.getItem('csc_current_user') || '{}');
+  const data = {
+    id: `leg_${Date.now()}`,
+    date, type, category: cat, description: desc, amount: parseFloat(amt),
+    createdBy: currentUser.name, createdAt: new Date().toISOString()
+  };
+  
+  await saveData('Ledger', data);
+  closeLedgerModal();
+  initLedger();
+}
+
+// ── PHASE 4: COMMISSION MODULE ──
+async function initCommission() {
+  const commData = await getData('Commission');
+  const monthStr = new Date().toISOString().slice(0, 7);
+  const monthComm = commData.filter(c => c.date && c.date.startsWith(monthStr));
+  
+  let aeps = 0, ins = 0, irctc = 0;
+  let tableHtml = '';
+  
+  monthComm.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(c => {
+    const amt = parseFloat(c.commissionAmount) || 0;
+    if (c.category === 'AEPS') aeps += amt;
+    else if (c.category === 'Insurance') ins += amt;
+    else if (c.category === 'IRCTC') irctc += amt;
+    
+    tableHtml += `
+      <tr>
+        <td>${c.date}</td>
+        <td>${c.category}</td>
+        <td>${c.description || '-'}</td>
+        <td class="text-right">₹${c.grossAmount || 0}</td>
+        <td class="text-right font-semibold text-primary">₹${amt}</td>
+      </tr>
+    `;
+  });
+  
+  if (tableHtml === '') tableHtml = '<tr><td colspan="5" class="text-center p-md text-muted">No commissions this month.</td></tr>';
+  document.getElementById('commission-table-body').innerHTML = tableHtml;
+  
+  document.getElementById('comm-aeps').textContent = `₹${aeps}`;
+  document.getElementById('comm-insurance').textContent = `₹${ins}`;
+  document.getElementById('comm-irctc').textContent = `₹${irctc}`;
+}
+
+function showCommissionModal() { document.getElementById('commission-modal').classList.remove('hidden'); document.getElementById('comm-date').value = new Date().toLocaleDateString('en-CA'); }
+function closeCommissionModal() { document.getElementById('commission-modal').classList.add('hidden'); }
+
+async function submitCommissionEntry() {
+  const date = document.getElementById('comm-date').value;
+  const cat = document.getElementById('comm-category').value;
+  const desc = document.getElementById('comm-desc').value;
+  const gross = document.getElementById('comm-gross').value;
+  const amt = document.getElementById('comm-amount').value;
+  
+  if (!date || !cat || !amt) return alert("Date, Category, and Commission Amount are required.");
+  
+  const currentUser = JSON.parse(sessionStorage.getItem('csc_current_user') || '{}');
+  const data = {
+    id: `com_${Date.now()}`,
+    date, category: cat, description: desc, grossAmount: parseFloat(gross) || 0, commissionAmount: parseFloat(amt),
+    createdBy: currentUser.name, createdAt: new Date().toISOString()
+  };
+  
+  await saveData('Commission', data);
+  closeCommissionModal();
+  initCommission();
+}
+
+// ── PHASE 4: IMPORT / EXPORT MODULE ──
+let importParsedData = [];
+let importHeaders = [];
+
+function handleCSVUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    parseCSV(text);
+  };
+  reader.readAsText(file);
+}
+
+function parseCSV(text) {
+  const lines = text.split('\n').filter(l => l.trim().length > 0);
+  if (lines.length < 2) return alert("CSV file seems empty or invalid.");
+  
+  importHeaders = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  importParsedData = [];
+  
+  for (let i = 1; i < lines.length; i++) {
+    const regex = /(?:,"|^")(""|[\w\W]*?)(?=",|"$)|(?:,(?!")|^(?!"))([^,]*?)(?=$|,)|(\r\n|\n)/g;
+    let matches = [];
+    let match;
+    while (match = regex.exec(lines[i])) {
+      matches.push(match[1] || match[2] || '');
+      if (regex.lastIndex === lines[i].length) break;
+    }
+    
+    matches = matches.filter(m => m !== undefined).map(m => m.replace(/^"|"$/g, '').trim());
+    
+    const obj = {};
+    importHeaders.forEach((h, idx) => {
+      obj[h] = matches[idx] || '';
+    });
+    importParsedData.push(obj);
+  }
+  
+  renderMappingUI();
+}
+
+function renderMappingUI() {
+  document.getElementById('import-dropzone').classList.add('hidden');
+  document.getElementById('import-mapping-ui').classList.remove('hidden');
+  
+  const targetFields = ['Customer Name', 'Mobile Number', 'Service Type', 'Stage', 'Expected Revenue', 'Notes'];
+  
+  const container = document.getElementById('import-mapping-container');
+  container.innerHTML = targetFields.map(tf => {
+    const options = importHeaders.map(h => `<option value="${h}" ${h.toLowerCase().includes(tf.split(' ')[0].toLowerCase()) ? 'selected' : ''}>${h}</option>`).join('');
+    return `
+      <div class="flex justify-between items-center mb-sm">
+        <label class="text-sm font-semibold">${tf}</label>
+        <select class="input import-map-select" style="width:60%;" data-field="${tf}">
+          <option value="">-- Ignore --</option>
+          ${options}
+        </select>
+      </div>
+    `;
+  }).join('');
+}
+
+async function processImport() {
+  const selects = document.querySelectorAll('.import-map-select');
+  const map = {};
+  selects.forEach(s => { if (s.value) map[s.dataset.field] = s.value; });
+  
+  if (!map['Customer Name'] || !map['Service Type']) {
+    return alert("Customer Name and Service Type are required fields to map.");
+  }
+  
+  const currentUser = JSON.parse(sessionStorage.getItem('csc_current_user') || '{}');
+  
+  let importedCount = 0;
+  const pipelineRows = [];
+  const customerRows = [];
+  
+  importParsedData.forEach((row, i) => {
+    const custId = `cust_imp_${Date.now()}_${i}`;
+    const name = row[map['Customer Name']];
+    const mobile = map['Mobile Number'] ? row[map['Mobile Number']] : '';
+    
+    customerRows.push({
+      id: custId, name: name, mobile: mobile,
+      createdAt: new Date().toISOString(), createdBy: currentUser.id || 'admin'
+    });
+    
+    pipelineRows.push({
+      id: `pipe_imp_${Date.now()}_${i}`,
+      customerId: custId,
+      customerName: name,
+      serviceType: row[map['Service Type']],
+      stage: map['Stage'] ? (row[map['Stage']] || 'New Lead') : 'New Lead',
+      expectedRevenue: map['Expected Revenue'] ? (parseFloat(row[map['Expected Revenue']]) || 0) : 0,
+      notes: map['Notes'] ? row[map['Notes']] : '',
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      assignedTo: currentUser.id || 'admin'
+    });
+    importedCount++;
+  });
+  
+  document.getElementById('import-mapping-ui').classList.add('hidden');
+  const preview = document.getElementById('import-preview');
+  preview.classList.remove('hidden');
+  document.getElementById('import-stats').textContent = `Processing ${importedCount} records...`;
+  
+  try {
+    await fetch(API.url, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'batchAppend', sheet: 'Pipeline', data: pipelineRows }),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    });
+    
+    await fetch(API.url, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'batchAppend', sheet: 'Customers', data: customerRows }),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    });
+    
+    document.getElementById('import-stats').textContent = `Successfully imported ${importedCount} records to Pipeline and Customers!`;
+    
+    await Cache.set('Pipeline', null);
+    await Cache.set('Customers', null);
+    initCRM();
+    initPipeline();
+    
+  } catch (e) {
+    document.getElementById('import-stats').textContent = `Error during import: ${e.message}`;
+  }
+}
+
+function exportDataCSV(sheet) {
+  getData(sheet).then(data => {
+    if (!data || data.length === 0) return alert("No data to export.");
+    const headers = Object.keys(data[0]);
+    let csv = headers.join(',') + '\n';
+    data.forEach(row => {
+      csv += headers.map(h => `"${(row[h]||'').toString().replace(/"/g, '""')}"`).join(',') + '\n';
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `${sheet}_Export_${new Date().toLocaleDateString('en-CA')}.csv`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+}
+
 function initApp(user) {
   startClock();
-  startSyncEngine(); // Phase 1.4
-  initConnectivityStatus(); // Phase 1.4
-  initDriveAPI(); // Phase 1.3
-  initCRM(); // Phase 2.1
-  initBilling(); // Phase 2.2
-  initDashboard(); // Phase 3.1
-  initPipeline(); // Phase 3.2
-  initFollowUps(); // Phase 3.3
+  startSyncEngine();
+  initConnectivityStatus();
+  initDriveAPI();
+  initCRM();
+  initBilling();
+  initDashboard();
+  initPipeline();
+  initFollowUps();
+  initDayClose();
+  initLedger();
+  initCommission();
 }
 
 // ── INITIALIZATION ──
