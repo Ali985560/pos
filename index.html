@@ -1786,7 +1786,7 @@ const MODULES = [
 // ── Apps Script API Client ───────────────────────────────────
 
 const API = {
-  url: localStorage.getItem('csc_api_url') || 'https://script.google.com/macros/s/AKfycbwyf9z5eicA-F6dUf1CgQiu6veQi1KqqDT6n1hGmto1xXjeI78jeJp8ztCyhIGBpaRK/exec', // Set from Settings module
+  url: localStorage.getItem('csc_api_url') || 'https://script.google.com/macros/s/AKfycbymflWTW1OVHv8Cm4-ouPafogqiMDNqcyOTS0jdoNK85_dhAagAGs-87Q8l6U1uUYSY/exec', // Updated to user's new deployment
 
   async get(sheet) {
     if (!this.url) { console.warn('API URL not set'); return null; }
