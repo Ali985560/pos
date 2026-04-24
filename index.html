@@ -1786,7 +1786,7 @@ const MODULES = [
 // ── Apps Script API Client ───────────────────────────────────
 
 const API = {
-  url: localStorage.getItem('csc_api_url') || 'https://script.google.com/macros/s/AKfycbymflWTW1OVHv8Cm4-ouPafogqiMDNqcyOTS0jdoNK85_dhAagAGs-87Q8l6U1uUYSY/exec', // Updated to user's new deployment
+  url: localStorage.getItem('csc_api_url') || 'https://script.google.com/macros/s/AKfycbznWrrzh1Cz7PeVvrDtLwUd3tZSj_Yd3hGlC2lhPp0NNqawoTLjYP_3Ju55y9UZ7z34/exec', // Set from Settings module
 
   async get(sheet) {
     if (!this.url) { console.warn('API URL not set'); return null; }
@@ -2802,12 +2802,15 @@ function showServiceSubProfile(caseId) {
     <div class="grid-2 gap-lg">
       <div>
         <div class="crm-section-title">Status & Dates</div>
-        <div class="flex-col gap-sm mb-md">
           <div class="flex justify-between items-center p-sm bg-surface border-default rounded-md">
             <span class="text-sm">Current Status:</span>
             <select class="select select-sm w-auto" onchange="changeCaseStatus('${caseId}', this.value)">
-              ${['New Lead','In Progress','Application Submitted','Pending Documents','Completed','Cancelled'].map(s => `<option value="${s}" ${caseItem.stage === s ? 'selected' : ''}>${s}</option>`).join('')}
+              ${['Work Took','Work Pending','Work Applied','Work Ready','Work Delivered','Cancelled'].map(s => `<option value="${s}" ${caseItem.stage === s ? 'selected' : ''}>${s}</option>`).join('')}
             </select>
+          </div>
+          <div class="flex justify-between items-center p-sm bg-surface border-default rounded-md">
+            <span class="text-sm">Ack Number:</span>
+            <input type="text" class="input input-sm w-auto" style="text-align:right;" placeholder="Enter Ack No." value="${caseItem.ackNo || ''}" onchange="updateCaseField('${caseId}', 'ackNo', this.value)">
           </div>
           <div class="flex justify-between items-center p-sm bg-surface border-default rounded-md">
             <span class="text-sm">Submission Date:</span>
@@ -2818,10 +2821,11 @@ function showServiceSubProfile(caseId) {
             <input type="date" class="input input-sm w-auto" value="${caseItem.approvalDate || ''}" onchange="updateCaseField('${caseId}', 'approvalDate', this.value)">
           </div>
           <div class="flex justify-between items-center p-sm bg-surface border-default rounded-md">
-            <span class="text-sm">Assigned To:</span>
-            <span class="font-semibold">${caseItem.assignedTo || 'Unassigned'}</span>
+            <span class="text-sm">Update Customer:</span>
+            <button class="btn btn-primary btn-sm flex items-center gap-xs" onclick="sendPipelineWhatsApp('${caseId}')">
+              <span style="font-size:1.1rem;">💬</span> WhatsApp Update
+            </button>
           </div>
-        </div>
 
         <div class="crm-section-title">Financials</div>
         <table class="data-table" style="background: transparent;">
@@ -2960,8 +2964,12 @@ async function uploadPipelineDocument(caseId, input) {
     const result = await response.json();
     
     if (result && result.url) {
-      const previewUrl = result.url.replace('/view?usp=drivesdk', '/preview').replace('open?id=', 'file/d/') + '/preview';
-      const finalUrl = previewUrl.includes('/preview') ? previewUrl : (result.url + '/preview');
+      // Robustly convert to preview URL
+      let finalUrl = result.url.replace('/view?usp=drivesdk', '/preview').replace('/view', '/preview');
+      if (finalUrl.includes('open?id=')) {
+        finalUrl = finalUrl.replace('open?id=', 'file/d/') + '/preview';
+      }
+      if (!finalUrl.endsWith('/preview')) finalUrl += '/preview';
       
       const newDoc = `${file.name}|${finalUrl}`;
       caseItem.documents = caseItem.documents ? `${caseItem.documents},${newDoc}` : newDoc;
@@ -2980,6 +2988,41 @@ async function uploadPipelineDocument(caseId, input) {
     btn.disabled = false;
     input.value = '';
   }
+}
+
+function sendPipelineWhatsApp(caseId) {
+  const c = pipelineCases.find(item => item.id === caseId);
+  if (!c) return;
+  
+  const customer = customersData.find(cust => cust.id === c.customerId);
+  const mobile = customer ? customer.mobile : c.customerMobile;
+  const name = customer ? customer.name : c.customerName;
+  
+  if (!mobile) {
+    alert('Customer mobile number missing!');
+    return;
+  }
+
+  let msg = '';
+  const status = c.stage || 'Work Took';
+  const ack = c.ackNo || 'TBD';
+
+  if (status === 'Work Took') {
+    msg = `Dear ${name}, humne aapka ${c.serviceType} ka kaam shuru kar diya hai. Jald hi aapko update denge. - Siraj CSC`;
+  } else if (status === 'Work Pending') {
+    msg = `Dear ${name}, aapka ${c.serviceType} ka kaam abhi pending hai (Reason: ${c.notes || 'Docs missing'}). Kripya center par sampark karein. - Siraj CSC`;
+  } else if (status === 'Work Applied') {
+    msg = `Dear ${name}, aapka ${c.serviceType} apply ho gaya hai. \nAck No: ${ack}\nAap status check kar sakte hain. - Siraj CSC`;
+  } else if (status === 'Work Ready') {
+    msg = `Dear ${name}, khushkhabri! Aapka ${c.serviceType} ka kaam tayyar ho gaya hai. Center se collect kar lein. - Siraj CSC`;
+  } else if (status === 'Work Delivered') {
+    msg = `Dear ${name}, aapka ${c.serviceType} deliver ho gaya hai. Humesha humse jude rahein. Shukriya! - Siraj CSC`;
+  } else {
+    msg = `Dear ${name}, aapka ${c.serviceType} update: Current Status is ${status}. - Siraj CSC`;
+  }
+
+  const url = `https://wa.me/91${mobile}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
 }
 
 function getStatusBadge(s) {
@@ -4026,7 +4069,7 @@ function renderDashboardChart(transactions) {
 
 // ── PIPELINE MODULE LOGIC ──
 const PIPELINE_STAGES = [
-  'New Lead', 'In Progress', 'Application Submitted', 'Pending Documents', 'Completed', 'Cancelled'
+  'Work Took', 'Work Pending', 'Work Applied', 'Work Ready', 'Work Delivered', 'Cancelled'
 ];
 
 async function initPipeline() {
